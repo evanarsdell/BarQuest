@@ -1,1 +1,332 @@
-yo
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>BarQuest — Begin Adventure</title>
+<style>
+  :root{
+    --bg:#0b1020;
+    --card:#0f1724;
+    --accent:#ffd166;
+    --muted:#9aa4b2;
+    --glass: rgba(255,255,255,0.04);
+    --glass-2: rgba(255,255,255,0.02);
+    --radius:18px;
+    --width:92vw;
+    --max:520px;
+  }
+
+  html,body{height:100%;margin:0;font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg,#071028 0%, #051426 60%); color:#e6eef8;-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:26px;}
+  .screen{
+    width:var(--width);
+    max-width:var(--max);
+    border-radius:20px;
+    padding:22px;
+    background: linear-gradient(180deg,var(--card), rgba(10,14,22,0.85));
+    box-shadow: 0 10px 30px rgba(2,6,12,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    position:relative;
+    overflow:hidden;
+    min-height:640px;
+  }
+
+  /* Header */
+  .title{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .logo{
+    width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#ff8a65);display:flex;align-items:center;justify-content:center;font-weight:700;color:#0b1020;box-shadow:0 6px 18px rgba(255,129,0,0.12);
+  }
+  h1{font-size:20px;margin:0}
+  p.lead{margin:6px 0 0;font-size:13px;color:var(--muted)}
+
+  /* Center hero & button */
+  .hero{display:flex;flex-direction:column;align-items:center;justify-content:center;height:420px}
+  .big-btn{
+    --h:72px;
+    height:var(--h);
+    min-width:260px;
+    border-radius:999px;
+    background:linear-gradient(180deg,#ffd166,#ffb84d);
+    display:flex;align-items:center;justify-content:center;font-weight:700;color:#0b1020;font-size:18px;
+    border:none;box-shadow:0 8px 30px rgba(0,0,0,0.45), 0 2px 0 rgba(255,255,255,0.06) inset;
+    transform:translateY(0);
+    transition:transform .45s cubic-bezier(.2,.9,.2,1), box-shadow .25s;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .big-btn:active{transform:translateY(-2px) scale(.998);}
+
+  /* floating upwards when clicked */
+  .big-btn.fly{
+    transform: translateY(-160px) scale(.88) rotate(-2deg);
+    transition: transform .8s cubic-bezier(.15,.8,.25,1);
+    filter: drop-shadow(0 30px 40px rgba(0,0,0,0.5));
+  }
+
+  /* loading overlay */
+  .loader-wrap{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transform:scale(.98);
+    transition:opacity .35s ease, transform .45s ease;
+  }
+  .loader-wrap.on{opacity:1;pointer-events:auto;transform:scale(1);}
+  .loader{
+    background:var(--glass);
+    padding:18px 20px;border-radius:14px;backdrop-filter: blur(6px);
+    display:flex;align-items:center;gap:14px;
+    box-shadow:0 8px 30px rgba(2,6,12,0.6);
+  }
+  .spinner{
+    width:44px;height:44px;border-radius:50%;border:4px solid rgba(255,255,255,0.06);border-top-color:var(--accent);
+    animation:spin 1s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Knight scene */
+  .scene{display:none;flex-direction:column;align-items:center;gap:12px;padding-top:4px}
+  .scene.on{display:flex}
+  .sky{position:relative;width:100%;height:240px;border-radius:14px;background: radial-gradient(1200px 300px at 10% 10%, rgba(255,255,255,0.03), transparent 6%), linear-gradient(180deg,#05142e 0%, #021028 100%);overflow:hidden;box-shadow:inset 0 -6px 20px rgba(0,0,0,0.35);}
+
+  /* simple stars */
+  .star{position:absolute;width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,0.85);opacity:.9;animation:twinkle 3s infinite;}
+  @keyframes twinkle{0%{opacity:.35}50%{opacity:1}100%{opacity:.35}}
+  .moon{position:absolute;right:18px;top:18px;width:56px;height:56px;border-radius:50%;background:linear-gradient(180deg,#fff9d1,#fff2b0);box-shadow:0 6px 30px rgba(255,200,80,0.12);}
+
+  /* knight SVG container */
+  .knight{
+    width:160px;height:160px;display:flex;align-items:center;justify-content:center;transform-origin:center;
+    animation:knight-bob 2.2s ease-in-out infinite;
+  }
+  @keyframes knight-bob{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+
+  /* shining animation */
+  .shine{position:absolute;left:-20%;top:0;width:140%;height:100%;pointer-events:none;background:linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.12) 48%, rgba(255,255,255,0) 100%);transform:skewX(-20deg) translateX(-100%);animation:glide 2.6s linear .6s forwards;}
+  @keyframes glide{to{transform:skewX(-20deg) translateX(120%)}}
+
+  /* dialog / speech bubble */
+  .dialog{
+    width:calc(100% - 30px);
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+    border-radius:12px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,0.5);
+    margin-top:12px;color:var(--muted);font-size:15px;line-height:1.4;position:relative;
+  }
+  .dialog:after{
+    content:"";position:absolute;left:20px;bottom:-16px;border-width:12px 12px 0 12px;border-style:solid;border-color:rgba(255,255,255,0.02) transparent transparent transparent;
+    filter:drop-shadow(0 6px 18px rgba(0,0,0,0.35));
+  }
+  .dialog strong{color:#fff}
+  .dialog a{color:var(--accent);text-decoration:none;font-weight:700}
+  .dialog .clip{display:block;margin-top:8px;background:var(--glass-2);padding:10px;border-radius:10px;color:#cfe8ff;font-size:13px}
+
+  /* choices */
+  .choices{display:flex;gap:10px;margin-top:12px}
+  .choice{flex:1;padding:10px 12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));text-align:center;font-weight:700;color:var(--accent);cursor:pointer}
+
+  /* small footer */
+  .foot{position:absolute;left:22px;right:22px;bottom:18px;font-size:12px;color:var(--muted);text-align:center}
+  @media (max-width:420px){
+    .screen{padding:16px}
+    .hero{height:360px}
+    .big-btn{min-width:220px;height:64px}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="screen" role="main" aria-live="polite">
+      <header class="title">
+        <div class="logo">BQ</div>
+        <div>
+          <h1>BarQuest</h1>
+          <p class="lead">A micro scavenger hunt · NFC-ready · mobile-first</p>
+        </div>
+      </header>
+
+      <section class="hero" id="hero">
+        <div style="text-align:center;margin-bottom:18px">
+          <svg width="120" height="28" viewBox="0 0 120 28" fill="none" style="display:inline-block">
+            <defs>
+              <linearGradient id="g" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#ffd166"/><stop offset="1" stop-color="#ff8a65"/></linearGradient>
+            </defs>
+            <rect x="0" y="0" width="120" height="28" rx="8" fill="url(#g)" opacity="0.12"/>
+            <text x="10" y="19" fill="#fff" font-weight="700" font-size="14">Scan the NFC tag →</text>
+          </svg>
+        </div>
+
+        <button class="big-btn" id="startBtn" aria-haspopup="true" aria-controls="scene">Begin Adventure</button>
+
+        <!-- loader overlay -->
+        <div class="loader-wrap" id="loader">
+          <div class="loader" role="status" aria-live="polite">
+            <div class="spinner" aria-hidden="true"></div>
+            <div>
+              <div style="font-weight:700;color:#fff">Summoning the Knight...</div>
+              <div style="font-size:13px;color:var(--muted);margin-top:6px">Booting riddles, unlocking clues</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scene revealed after clicking -->
+      <section class="scene" id="scene" aria-hidden="true">
+        <div class="sky" id="sky" role="img" aria-label="Knight under night sky">
+          <div class="moon" aria-hidden="true"></div>
+          <!-- a few stars positioned with inline style for variety -->
+          <div class="star" style="left:10%;top:18%;animation-delay:.2s"></div>
+          <div class="star" style="left:24%;top:8%;width:4px;height:4px;animation-delay:.5s"></div>
+          <div class="star" style="left:52%;top:26%;animation-delay:1s"></div>
+          <div class="star" style="left:68%;top:12%;animation-delay:.8s"></div>
+
+          <div class="knight" id="knightSVG" aria-hidden="true">
+            <!-- simple vector knight made with SVG shapes (no external assets) -->
+            <svg viewBox="0 0 120 120" width="160" height="160" role="presentation">
+              <defs>
+                <linearGradient id="shieldG" x1="0" x2="1">
+                  <stop offset="0" stop-color="#ffd166"/>
+                  <stop offset="1" stop-color="#ff8a65"/>
+                </linearGradient>
+                <linearGradient id="metal" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0" stop-color="#dfe7f6"/>
+                  <stop offset="1" stop-color="#9fb4d6"/>
+                </linearGradient>
+              </defs>
+
+              <!-- ground -->
+              <rect x="0" y="95" width="120" height="25" rx="8" fill="#021216" opacity=".25"/>
+
+              <!-- shield -->
+              <g transform="translate(30,22)">
+                <path id="shield" d="M30 0 L50 10 L50 40 L30 56 L10 40 L10 10 Z" fill="url(#shieldG)" stroke="#ffedc5" stroke-opacity=".18"/>
+                <g id="shine" opacity="0.9">
+                  <rect x="22" y="6" width="6" height="34" fill="rgba(255,255,255,0.12)" transform="rotate(-18 25 22)">
+                    <animate attributeName="x" values="22;48" dur="2.6s" begin="1s" repeatCount="indefinite" />
+                  </rect>
+                </g>
+              </g>
+
+              <!-- helmet -->
+              <g transform="translate(46,16)">
+                <ellipse cx="14" cy="14" rx="14" ry="12" fill="url(#metal)" stroke="#fff" stroke-opacity=".12"/>
+                <rect x="6" y="18" width="16" height="10" rx="3" fill="#7b8fb5" opacity=".95"/>
+                <rect x="4" y="28" width="20" height="6" rx="3" fill="#425a84"/>
+              </g>
+
+              <!-- sword -->
+              <g transform="translate(78,34) rotate(-8)">
+                <rect x="0" y="20" width="6" height="36" rx="2" fill="#ccd7ea"/>
+                <rect x="-3" y="14" width="12" height="8" rx="2" fill="#ffecb8"/>
+                <rect x="-1" y="56" width="8" height="8" rx="2" fill="#654"/>
+              </g>
+            </svg>
+          </div>
+
+          <div class="shine" aria-hidden="true"></div>
+        </div>
+
+        <!-- dialog / instructions -->
+        <div class="dialog" id="dialog" tabindex="0">
+          <strong>Choose your adventure</strong>
+          <div style="margin-top:8px">
+            <span style="display:block;margin-bottom:8px">Are you sure you want to accept this adventure? Follow these instructions exactly to reach the next bar.</span>
+
+            <div class="clip" id="clueText">
+              To find the sticker: go to the bartender's stall above the restroom door (the small shelf). Look just above the toilet — there will be a sticker that reads <strong>"BarQuest: Round 1"</strong>. The sticker hides a short code you will need to advance.
+            </div>
+
+            <div class="choices" aria-hidden="false">
+              <div class="choice" id="accept">I accept → show map</div>
+              <div class="choice" id="decline" style="color:#cdd6dd;background:transparent;border:1px solid rgba(255,255,255,0.03)">Not yet</div>
+            </div>
+
+            <div style="margin-top:10px;font-size:13px;color:var(--muted)">
+              Next bar: <a href="https://maps.google.com/?q=Coordinator+Bar" target="_blank" rel="noopener noreferrer">Coordinator Bar — open map</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="foot">Tip: when you scan the NFC, point your phone at the tag and open this URL for a full mobile view.</div>
+    </main>
+  </div>
+
+<script>
+  // DOM refs
+  const startBtn = document.getElementById('startBtn');
+  const loader = document.getElementById('loader');
+  const scene = document.getElementById('scene');
+  const hero = document.getElementById('hero');
+  const knight = document.getElementById('knightSVG');
+  const accept = document.getElementById('accept');
+  const decline = document.getElementById('decline');
+  const dialog = document.getElementById('dialog');
+
+  // start sequence
+  startBtn.addEventListener('click', async () => {
+    // visual button fly
+    startBtn.classList.add('fly');
+
+    // show loader
+    loader.classList.add('on');
+
+    // short staged sequence
+    await wait(1400);
+    // speed up: scale button up a bit
+    startBtn.style.transition = 'transform .6s cubic-bezier(.2,.9,.2,1)';
+    startBtn.style.opacity = '.0';
+
+    await wait(900);
+    // hide loader, reveal scene
+    loader.classList.remove('on');
+    hero.style.height = 'auto';
+    scene.classList.add('on');
+    scene.setAttribute('aria-hidden','false');
+
+    // small flourish: make knight flash shine once
+    const shine = document.querySelector('.shine');
+    shine.style.animation = 'glide 1.6s linear forwards';
+
+    // focus dialog for accessibility
+    setTimeout(()=> dialog.focus(), 900);
+  });
+
+  // accept -> open map (same link but also visually confirm)
+  accept.addEventListener('click', () => {
+    // simple confirmation and then open map
+    accept.innerText = 'Opening map…';
+    accept.style.pointerEvents = 'none';
+    // open link in new tab
+    const mapUrl = 'https://maps.google.com/?q=Coordinator+Bar';
+    window.open(mapUrl, '_blank', 'noopener');
+    // small flash
+    accept.style.background = 'linear-gradient(180deg,#ffeca8,#ffd166)';
+    setTimeout(()=> accept.innerText = 'I accept → show map', 1500);
+  });
+
+  decline.addEventListener('click', () => {
+    decline.innerText = 'Take your time';
+    setTimeout(()=> decline.innerText = 'Not yet', 900);
+  });
+
+  // utility wait
+  function wait(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+  // create a couple more animated stars for variety (runtime)
+  (function sprinkleStars(){
+    const sky = document.getElementById('sky');
+    for(let i=0;i<6;i++){
+      const s = document.createElement('div');
+      s.className = 'star';
+      s.style.left = (5 + Math.random()*90) + '%';
+      s.style.top = (5 + Math.random()*60) + '%';
+      s.style.width = (2 + Math.random()*4) + 'px';
+      s.style.height = s.style.width;
+      s.style.animationDelay = (Math.random()*1.8)+'s';
+      sky.appendChild(s);
+    }
+  })();
+
+  // small keyboard accessibility: Enter on start
+  startBtn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startBtn.click(); } });
+</script>
+</body>
+</html>
+
