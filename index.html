@@ -1,583 +1,1068 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Asteroid Shooter</title>
-  <style>
-    :root { --bg:#070A12; --panel:rgba(255,255,255,.06); --text:rgba(255,255,255,.92); --muted:rgba(255,255,255,.6); }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    body{overflow:hidden}
-    #wrap{position:fixed;inset:0;display:grid;place-items:center}
-    canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-    #hud{
-      position:fixed;top:env(safe-area-inset-top);left:env(safe-area-inset-left);right:env(safe-area-inset-right);
-      padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none;user-select:none;z-index:3
-    }
-    .pill{
-      background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:8px 12px;
-      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-weight:700;letter-spacing:.2px;font-size:14px
-    }
-    #titlePill{font-weight:800}
-    #scorePill{margin-left:auto;text-align:right;min-width:132px}
-    #scorePill small{display:block;font-weight:700;color:var(--muted);letter-spacing:.2px}
-    #overlay{
-      position:fixed;inset:0;display:grid;place-items:center;padding:22px;z-index:4;
-      background:radial-gradient(1200px 600px at 50% 15%, rgba(120,160,255,.20), transparent 60%),
-               radial-gradient(900px 500px at 80% 70%, rgba(255,120,180,.12), transparent 55%),
-               rgba(0,0,0,.55);
-      backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)
-    }
-    #card{
-      width:min(520px,100%);background:rgba(10,12,20,.65);border:1px solid rgba(255,255,255,.14);
-      border-radius:18px;padding:18px;box-shadow:0 18px 60px rgba(0,0,0,.55)
-    }
-    #card h1{margin:0 0 8px;font-size:22px;letter-spacing:.2px}
-    #card p{margin:0 0 12px;color:var(--muted);line-height:1.35;font-weight:600}
-    #startBtn{
-      width:100%;appearance:none;border:0;border-radius:16px;padding:16px 16px;font-size:18px;font-weight:900;letter-spacing:.3px;
-      background:linear-gradient(135deg, rgba(120,160,255,.95), rgba(255,120,180,.92));color:#06070c;box-shadow:0 16px 40px rgba(120,160,255,.18)
-    }
-    #startBtn:active{transform:translateY(1px) scale(.995)}
-    #metaRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .chip{
-      flex:1 1 140px;border-radius:12px;padding:10px 12px;background:rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.12);color:var(--muted);font-weight:700;font-size:13px;line-height:1.25
-    }
-    .chip b{color:var(--text)}
-    #hint{margin-top:10px;font-size:13px;color:rgba(255,255,255,.72);font-weight:700}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>FORTUNEX · Lucky Draw</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Rajdhani:wght@500;600;700&display=swap');
 
-    /* Bottom "slingshot zone" indicator */
-    #zone{
-      position:fixed;left:env(safe-area-inset-left);right:env(safe-area-inset-right);bottom:env(safe-area-inset-bottom);
-      height:30%; /* a bit taller so you can pull more */
-      z-index:2;pointer-events:none;
-      background:linear-gradient(to top, rgba(255,255,255,.06), transparent 60%);
-      border-top:1px solid rgba(255,255,255,.08);opacity:.35
-    }
-  </style>
+*, *::before, *::after {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+-webkit-tap-highlight-color: transparent;
+-webkit-touch-callout: none;
+-webkit-user-select: none;
+user-select: none;
+}
+
+:root {
+–violet: #8B5CF6;
+–violet-bright: #A78BFA;
+–violet-glow: rgba(139, 92, 246, 0.6);
+–gold: #F59E0B;
+–gold-bright: #FCD34D;
+–gold-glow: rgba(245, 158, 11, 0.5);
+–black: #030305;
+–dark: #0A0A12;
+–card-dark: #0F0F1A;
+–glass: rgba(255,255,255,0.04);
+–glass-border: rgba(255,255,255,0.08);
+–text-primary: #F0EEFF;
+–text-muted: rgba(240,238,255,0.45);
+–font-display: ‘Cormorant Garamond’, Georgia, serif;
+–font-ui: ‘Rajdhani’, sans-serif;
+}
+
+html, body {
+width: 100%;
+height: 100%;
+overflow: hidden;
+overscroll-behavior: none;
+-webkit-overflow-scrolling: touch;
+background: var(–black);
+touch-action: none;
+}
+
+body {
+position: fixed;
+top: 0; left: 0; right: 0; bottom: 0;
+}
+
+/* ─── SCREEN SYSTEM ─── */
+.screen {
+position: absolute;
+inset: 0;
+width: 100%;
+height: 100%;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+overflow: hidden;
+}
+.screen.active {
+opacity: 1;
+pointer-events: all;
+}
+
+/* ─── ANIMATED BACKGROUND ─── */
+.bg-canvas {
+position: absolute;
+inset: 0;
+background: var(–black);
+overflow: hidden;
+}
+
+.bg-orb {
+position: absolute;
+border-radius: 50%;
+filter: blur(80px);
+opacity: 0.18;
+animation: orbFloat 8s ease-in-out infinite;
+}
+.bg-orb.o1 {
+width: 60vw; height: 60vw;
+background: var(–violet);
+top: -20%; left: -20%;
+animation-duration: 9s;
+}
+.bg-orb.o2 {
+width: 50vw; height: 50vw;
+background: var(–gold);
+bottom: -15%; right: -15%;
+animation-duration: 11s;
+animation-delay: -4s;
+}
+.bg-orb.o3 {
+width: 40vw; height: 40vw;
+background: #2563EB;
+top: 40%; left: 30%;
+animation-duration: 13s;
+animation-delay: -7s;
+}
+
+@keyframes orbFloat {
+0%, 100% { transform: translate(0,0) scale(1); }
+33% { transform: translate(6%, 4%) scale(1.08); }
+66% { transform: translate(-4%, 6%) scale(0.95); }
+}
+
+/* grid shimmer */
+.bg-grid {
+position: absolute;
+inset: 0;
+background-image:
+linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px),
+linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px);
+background-size: 40px 40px;
+mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 40%, transparent 100%);
+-webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 40%, transparent 100%);
+}
+
+/* shimmer particles */
+.shimmer-field {
+position: absolute;
+inset: 0;
+overflow: hidden;
+pointer-events: none;
+}
+.shimmer-particle {
+position: absolute;
+width: 2px; height: 2px;
+background: white;
+border-radius: 50%;
+opacity: 0;
+animation: shimmerBlink var(–d, 3s) ease-in-out var(–delay, 0s) infinite;
+}
+
+@keyframes shimmerBlink {
+0%, 100% { opacity: 0; transform: scale(1); }
+50% { opacity: var(–peak, 0.6); transform: scale(2); }
+}
+
+/* ─── SCREEN 1: HOOK ─── */
+#screen1 .content {
+position: relative;
+z-index: 2;
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 0;
+text-align: center;
+padding: 0 32px;
+}
+
+.logo-badge {
+font-family: var(–font-ui);
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 0.4em;
+color: var(–gold);
+opacity: 0.8;
+text-transform: uppercase;
+margin-bottom: 36px;
+padding: 6px 16px;
+border: 1px solid rgba(245,158,11,0.25);
+border-radius: 20px;
+background: rgba(245,158,11,0.06);
+backdrop-filter: blur(8px);
+-webkit-backdrop-filter: blur(8px);
+animation: fadeSlideUp 1s 0.3s both;
+}
+
+.hero-title {
+font-family: var(–font-display);
+font-size: clamp(52px, 15vw, 82px);
+font-weight: 700;
+line-height: 0.9;
+color: var(–text-primary);
+letter-spacing: -0.02em;
+margin-bottom: 12px;
+animation: fadeSlideUp 1s 0.5s both;
+}
+.hero-title span {
+background: linear-gradient(135deg, var(–violet-bright), var(–gold-bright));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+}
+
+.hero-sub {
+font-family: var(–font-ui);
+font-size: 14px;
+font-weight: 500;
+letter-spacing: 0.25em;
+color: var(–text-muted);
+text-transform: uppercase;
+margin-bottom: 64px;
+animation: fadeSlideUp 1s 0.7s both;
+}
+
+.start-btn {
+position: relative;
+font-family: var(–font-ui);
+font-size: 13px;
+font-weight: 700;
+letter-spacing: 0.35em;
+text-transform: uppercase;
+color: var(–black);
+background: linear-gradient(135deg, var(–violet-bright), var(–gold-bright));
+border: none;
+border-radius: 60px;
+padding: 20px 48px;
+cursor: pointer;
+outline: none;
+-webkit-appearance: none;
+animation: fadeSlideUp 1s 0.9s both, btnPulse 2.5s 1.9s ease-in-out infinite;
+transition: transform 0.15s, box-shadow 0.15s;
+box-shadow:
+0 0 40px var(–violet-glow),
+0 0 80px rgba(139,92,246,0.2),
+0 4px 20px rgba(0,0,0,0.5);
+}
+.start-btn::before {
+content: ‘’;
+position: absolute;
+inset: -2px;
+border-radius: 62px;
+background: linear-gradient(135deg, var(–violet), var(–gold));
+z-index: -1;
+opacity: 0.5;
+filter: blur(12px);
+animation: btnPulse 2.5s ease-in-out infinite;
+}
+.start-btn:active {
+transform: scale(0.94);
+box-shadow: 0 0 20px var(–violet-glow), 0 2px 8px rgba(0,0,0,0.5);
+}
+
+@keyframes btnPulse {
+0%, 100% { box-shadow: 0 0 40px var(–violet-glow), 0 0 80px rgba(139,92,246,0.2), 0 4px 20px rgba(0,0,0,0.5); }
+50% { box-shadow: 0 0 60px rgba(167,139,250,0.8), 0 0 120px rgba(139,92,246,0.4), 0 4px 20px rgba(0,0,0,0.5); }
+}
+
+.start-mystery {
+font-family: var(–font-display);
+font-size: 16px;
+font-style: italic;
+color: var(–text-muted);
+margin-top: 24px;
+letter-spacing: 0.05em;
+animation: fadeSlideUp 1s 1.1s both;
+}
+
+/* ─── SCREEN 2: CARD GAME ─── */
+#screen2 {
+background: var(–dark);
+}
+
+.game-header {
+position: relative;
+z-index: 2;
+text-align: center;
+padding: 0 24px;
+margin-bottom: 40px;
+}
+
+.game-eyebrow {
+font-family: var(–font-ui);
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 0.45em;
+color: var(–gold);
+text-transform: uppercase;
+opacity: 0.7;
+margin-bottom: 10px;
+}
+
+.game-title {
+font-family: var(–font-display);
+font-size: clamp(26px, 8vw, 38px);
+font-weight: 700;
+color: var(–text-primary);
+line-height: 1.1;
+}
+
+.game-subtitle {
+font-family: var(–font-ui);
+font-size: 13px;
+color: var(–text-muted);
+letter-spacing: 0.1em;
+margin-top: 8px;
+}
+
+/* Cards arena */
+.cards-arena {
+position: relative;
+z-index: 2;
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 16px;
+perspective: 1200px;
+width: 100%;
+padding: 0 16px;
+}
+
+.card-wrap {
+flex: 0 0 auto;
+width: calc(30vw);
+max-width: 115px;
+aspect-ratio: 2/3;
+cursor: pointer;
+perspective: 600px;
+}
+
+.card-inner {
+position: relative;
+width: 100%;
+height: 100%;
+transform-style: preserve-3d;
+transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+border-radius: 12px;
+}
+
+.card-wrap.flipped .card-inner {
+transform: rotateY(180deg);
+}
+
+.card-face {
+position: absolute;
+inset: 0;
+border-radius: 12px;
+backface-visibility: hidden;
+-webkit-backface-visibility: hidden;
+overflow: hidden;
+}
+
+/* CARD BACK */
+.card-back {
+background: linear-gradient(160deg, #1a1030 0%, #0d0918 100%);
+border: 1.5px solid rgba(139,92,246,0.3);
+box-shadow:
+0 8px 32px rgba(0,0,0,0.6),
+0 0 0 1px rgba(255,255,255,0.04) inset,
+0 1px 0 rgba(255,255,255,0.08) inset;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.card-back-pattern {
+position: absolute;
+inset: 6px;
+border: 1px solid rgba(139,92,246,0.2);
+border-radius: 8px;
+background-image:
+repeating-linear-gradient(45deg, rgba(139,92,246,0.06) 0px, rgba(139,92,246,0.06) 1px, transparent 1px, transparent 8px),
+repeating-linear-gradient(-45deg, rgba(139,92,246,0.06) 0px, rgba(139,92,246,0.06) 1px, transparent 1px, transparent 8px);
+}
+
+.card-back-logo {
+position: relative;
+z-index: 2;
+font-family: var(–font-display);
+font-size: 28px;
+color: rgba(139,92,246,0.5);
+font-weight: 700;
+font-style: italic;
+}
+
+/* CARD FRONT */
+.card-front {
+background: #FAFAF7;
+border-radius: 12px;
+transform: rotateY(180deg);
+display: flex;
+flex-direction: column;
+align-items: stretch;
+justify-content: space-between;
+padding: 8px;
+box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+}
+
+.card-corner {
+display: flex;
+flex-direction: column;
+align-items: center;
+line-height: 1;
+}
+.card-corner.tl { align-self: flex-start; }
+.card-corner.br { align-self: flex-end; transform: rotate(180deg); }
+
+.card-rank {
+font-family: Georgia, ‘Times New Roman’, serif;
+font-size: clamp(16px, 5vw, 22px);
+font-weight: 700;
+color: #111;
+line-height: 1;
+}
+.card-suit-corner {
+font-size: clamp(10px, 3vw, 14px);
+line-height: 1;
+color: #111;
+}
+
+.card-center {
+flex: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.card-center-suit {
+font-size: clamp(36px, 12vw, 54px);
+line-height: 1;
+filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+}
+
+/* Joker cards */
+.card-front.joker {
+background: linear-gradient(160deg, #F5F3FF, #EDE9FE);
+}
+.card-front.joker .card-rank,
+.card-front.joker .card-suit-corner {
+color: #7C3AED;
+}
+
+/* ─── GAME STATUS ─── */
+.game-status {
+position: relative;
+z-index: 2;
+text-align: center;
+margin-top: 32px;
+height: 50px;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.status-text {
+font-family: var(–font-ui);
+font-size: 14px;
+font-weight: 600;
+letter-spacing: 0.1em;
+color: var(–text-muted);
+text-transform: uppercase;
+transition: opacity 0.3s;
+}
+
+/* ─── SUCCESS BANNER ─── */
+.success-overlay {
+position: absolute;
+inset: 0;
+z-index: 10;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+background: rgba(3,3,5,0.88);
+backdrop-filter: blur(16px);
+-webkit-backdrop-filter: blur(16px);
+opacity: 0;
+pointer-events: none;
+transition: opacity 0.5s;
+}
+.success-overlay.visible {
+opacity: 1;
+pointer-events: all;
+}
+
+.success-emoji {
+font-size: 64px;
+margin-bottom: 16px;
+animation: bounceIn 0.5s cubic-bezier(0.68,-0.55,0.27,1.55);
+}
+.success-title {
+font-family: var(–font-display);
+font-size: 36px;
+font-weight: 700;
+color: var(–gold-bright);
+letter-spacing: 0.05em;
+margin-bottom: 8px;
+text-align: center;
+}
+.success-sub {
+font-family: var(–font-ui);
+font-size: 13px;
+letter-spacing: 0.2em;
+color: var(–text-muted);
+text-transform: uppercase;
+margin-bottom: 36px;
+}
+
+.progress-track {
+width: 220px;
+height: 4px;
+background: rgba(255,255,255,0.1);
+border-radius: 4px;
+overflow: hidden;
+}
+.progress-fill {
+height: 100%;
+width: 0%;
+background: linear-gradient(90deg, var(–violet), var(–gold));
+border-radius: 4px;
+transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* confetti canvas */
+#confettiCanvas {
+position: absolute;
+inset: 0;
+pointer-events: none;
+z-index: 9;
+}
+
+/* ─── SCREEN 3: RICKROLL ─── */
+#screen3 {
+background: var(–black);
+}
+
+.prize-splash {
+position: absolute;
+inset: 0;
+z-index: 5;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+background: var(–black);
+gap: 24px;
+transition: opacity 0.5s;
+}
+
+.prize-splash.hidden {
+opacity: 0;
+pointer-events: none;
+}
+
+.prize-icon {
+font-size: 64px;
+animation: bounceFloat 1s ease-in-out infinite alternate;
+}
+
+@keyframes bounceFloat {
+from { transform: translateY(0); }
+to { transform: translateY(-10px); }
+}
+
+.prize-text {
+font-family: var(–font-display);
+font-size: 28px;
+font-weight: 700;
+color: var(–text-primary);
+letter-spacing: 0.05em;
+}
+
+.spinner {
+width: 36px; height: 36px;
+border: 3px solid rgba(139,92,246,0.2);
+border-top-color: var(–violet-bright);
+border-radius: 50%;
+animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.yt-frame {
+position: absolute;
+inset: 0;
+width: 100%;
+height: 100%;
+border: none;
+z-index: 4;
+opacity: 0;
+transition: opacity 0.6s;
+}
+.yt-frame.visible {
+opacity: 1;
+}
+
+/* ─── CARD DEAL ANIMATIONS ─── */
+.card-wrap {
+opacity: 0;
+transform: translateY(-120px) scale(0.8);
+}
+.card-wrap.dealt {
+opacity: 1;
+transform: translateY(0) scale(1);
+transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1), opacity 0.4s ease;
+}
+.card-wrap.dealt:nth-child(1) { transition-delay: 0s; }
+.card-wrap.dealt:nth-child(2) { transition-delay: 0.12s; }
+.card-wrap.dealt:nth-child(3) { transition-delay: 0.24s; }
+
+/* Shuffle slide */
+.card-wrap.shuffle-left {
+transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
+transform: translateX(-60px) !important;
+}
+.card-wrap.shuffle-right {
+transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
+transform: translateX(60px) !important;
+}
+.card-wrap.shuffle-reset {
+transition: transform 0.35s cubic-bezier(0.4,0,0.2,1) !important;
+transform: translateX(0) !important;
+}
+
+/* press feedback on cards */
+.card-wrap.pressable:active {
+transform: scale(0.94) !important;
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeSlideUp {
+from { opacity: 0; transform: translateY(24px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounceIn {
+from { opacity: 0; transform: scale(0.3); }
+to { opacity: 1; transform: scale(1); }
+}
+
+/* highlight chosen card */
+.card-wrap.chosen .card-inner {
+box-shadow: 0 0 0 3px var(–gold), 0 0 30px var(–gold-glow);
+border-radius: 12px;
+}
+
+/* instruction pulse */
+.pulse-hint {
+animation: hintPulse 1.5s ease-in-out infinite;
+}
+@keyframes hintPulse {
+0%, 100% { opacity: 0.5; }
+50% { opacity: 1; }
+}
+</style>
+
 </head>
 <body>
-  <div id="wrap"><canvas id="c"></canvas></div>
 
-  <div id="hud" aria-hidden="true">
-    <div id="titlePill" class="pill">Asteroid Shooter</div>
-    <div id="scorePill" class="pill">
-      <small>SCORE</small><span id="scoreTxt">0</span>
-      <small style="margin-top:4px;">HIGH&nbsp;<span id="highTxt">0</span></small>
-    </div>
+<!-- ═══════════════════════════════ SCREEN 1 ═══════════════════════════════ -->
+
+<div class="screen active" id="screen1">
+  <div class="bg-canvas">
+    <div class="bg-orb o1"></div>
+    <div class="bg-orb o2"></div>
+    <div class="bg-orb o3"></div>
+    <div class="bg-grid"></div>
+    <div class="shimmer-field" id="shimmerField"></div>
   </div>
 
-  <div id="zone" aria-hidden="true"></div>
+  <div class="content">
+    <div class="logo-badge">✦ FORTUNEX LABS ✦</div>
+    <h1 class="hero-title">Think<br>You're<br><span>Lucky?</span></h1>
+    <p class="hero-sub">One Card Changes Everything</p>
+    <button class="start-btn" id="startBtn">PUSH TO START</button>
+    <p class="start-mystery">Your fortune awaits, if you dare.</p>
+  </div>
+</div>
 
-  <div id="overlay" role="dialog" aria-modal="true">
-    <div id="card">
-      <h1>Asteroid Shooter</h1>
-      <p><b>Shoot the asteroids.</b> Pull down in the bottom zone to charge, then release to slingshot a ball upward.</p>
-      <button id="startBtn">Click to start</button>
-      <div id="metaRow">
-        <div class="chip"><b>How to play</b><br/>Drag down ➜ release to shoot</div>
-        <div class="chip"><b>Goal</b><br/>Hit asteroids, don’t let them reach the bottom</div>
-        <div class="chip"><b>High score</b><br/>Stays while this tab stays open</div>
+<!-- ═══════════════════════════════ SCREEN 2 ═══════════════════════════════ -->
+
+<div class="screen" id="screen2">
+  <div class="bg-canvas" style="opacity:0.5">
+    <div class="bg-orb o1" style="animation-duration:12s;opacity:0.1"></div>
+    <div class="bg-orb o2" style="animation-duration:14s;opacity:0.08"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <div class="game-header">
+    <div class="game-eyebrow">✦ Round One ✦</div>
+    <h2 class="game-title">Find the Ace.<br>Win the Prize.</h2>
+    <p class="game-subtitle" id="gameSubtitle">Memorise the Ace of Spades…</p>
+  </div>
+
+  <div class="cards-arena" id="cardsArena">
+    <!-- Card 0 -->
+    <div class="card-wrap" id="card0">
+      <div class="card-inner">
+        <div class="card-face card-back">
+          <div class="card-back-pattern"></div>
+          <div class="card-back-logo">F</div>
+        </div>
+        <div class="card-face card-front" id="cardFront0">
+          <div class="card-corner tl">
+            <div class="card-rank" id="rank0">A</div>
+            <div class="card-suit-corner" id="suit0">♠</div>
+          </div>
+          <div class="card-center">
+            <div class="card-center-suit" id="centerSuit0">♠</div>
+          </div>
+          <div class="card-corner br">
+            <div class="card-rank" id="rank0b">A</div>
+            <div class="card-suit-corner" id="suit0b">♠</div>
+          </div>
+        </div>
       </div>
-      <div id="hint">Tip: Longer pull = stronger shot. Rapid-fire is on.</div>
+    </div>
+
+```
+<!-- Card 1 -->
+<div class="card-wrap" id="card1">
+  <div class="card-inner">
+    <div class="card-face card-back">
+      <div class="card-back-pattern"></div>
+      <div class="card-back-logo">F</div>
+    </div>
+    <div class="card-face card-front" id="cardFront1">
+      <div class="card-corner tl">
+        <div class="card-rank" id="rank1">K</div>
+        <div class="card-suit-corner" id="suit1">♥</div>
+      </div>
+      <div class="card-center">
+        <div class="card-center-suit" id="centerSuit1">♥</div>
+      </div>
+      <div class="card-corner br">
+        <div class="card-rank" id="rank1b">K</div>
+        <div class="card-suit-corner" id="suit1b">♥</div>
+      </div>
     </div>
   </div>
+</div>
 
-  <script>
-    // ===== Utilities =====
-    const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
-    const rand = (a,b)=>a+Math.random()*(b-a);
-    const dist2=(ax,ay,bx,by)=>{const dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;};
+<!-- Card 2 -->
+<div class="card-wrap" id="card2">
+  <div class="card-inner">
+    <div class="card-face card-back">
+      <div class="card-back-pattern"></div>
+      <div class="card-back-logo">F</div>
+    </div>
+    <div class="card-face card-front" id="cardFront2">
+      <div class="card-corner tl">
+        <div class="card-rank" id="rank2">7</div>
+        <div class="card-suit-corner" id="suit2">♦</div>
+      </div>
+      <div class="card-center">
+        <div class="card-center-suit" id="centerSuit2">♦</div>
+      </div>
+      <div class="card-corner br">
+        <div class="card-rank" id="rank2b">7</div>
+        <div class="card-suit-corner" id="suit2b">♦</div>
+      </div>
+    </div>
+  </div>
+</div>
+```
 
-    // ===== Canvas setup =====
-    const canvas=document.getElementById('c');
-    const ctx=canvas.getContext('2d',{alpha:false});
-    let W=0,H=0,DPR=1;
+  </div>
 
-    function resize(){
-      DPR=Math.max(1,Math.min(3,window.devicePixelRatio||1));
-      W=Math.floor(window.innerWidth);
-      H=Math.floor(window.innerHeight);
-      canvas.width=Math.floor(W*DPR);
-      canvas.height=Math.floor(H*DPR);
-      canvas.style.width=W+'px';
-      canvas.style.height=H+'px';
-      ctx.setTransform(DPR,0,0,DPR,0,0);
-      initStars();
+  <div class="game-status">
+    <div class="status-text pulse-hint" id="statusText">Watch carefully…</div>
+  </div>
+
+  <!-- Confetti -->
+
+<canvas id="confettiCanvas"></canvas>
+
+  <!-- Success overlay -->
+
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-emoji">🎉</div>
+    <div class="success-title">YOU FOUND IT!</div>
+    <div class="success-sub">Claiming your prize…</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ SCREEN 3 ═══════════════════════════════ -->
+
+<div class="screen" id="screen3">
+  <div class="prize-splash" id="prizeSplash">
+    <div class="prize-icon">🎁</div>
+    <div class="prize-text">Prize Loading…</div>
+    <div class="spinner"></div>
+  </div>
+  <iframe
+    id="ytFrame"
+    class="yt-frame"
+    src=""
+    allow="autoplay; fullscreen"
+    allowfullscreen
+    frameborder="0"
+  ></iframe>
+</div>
+
+<script>
+// ─── prevent all scroll/bounce ───
+document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+document.addEventListener('touchstart', e => {
+  if (e.target.closest('.card-wrap, .start-btn')) return;
+  e.preventDefault();
+}, { passive: false });
+
+// ─── shimmer particles ───
+(function() {
+  const field = document.getElementById('shimmerField');
+  for (let i = 0; i < 55; i++) {
+    const p = document.createElement('div');
+    p.className = 'shimmer-particle';
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      --d:${2.5+Math.random()*4}s;
+      --delay:${Math.random()*5}s;
+      --peak:${0.3+Math.random()*0.6};
+    `;
+    field.appendChild(p);
+  }
+})();
+
+// ─── Screen transitions ───
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+    s.style.pointerEvents = 'none';
+  });
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  el.style.pointerEvents = 'all';
+}
+
+// ─── Screen 1 → 2 ───
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('startBtn').addEventListener('touchend', function(e) {
+  e.preventDefault();
+  startGame();
+});
+
+function startGame() {
+  showScreen('screen2');
+  setTimeout(dealCards, 300);
+}
+
+// ─── Card Game Logic ───
+const cards = [
+  document.getElementById('card0'),
+  document.getElementById('card1'),
+  document.getElementById('card2'),
+];
+
+// Initial card data — aceIdx = 0
+let aceIdx = 0;
+const cardData = [
+  { rank: 'A', suit: '♠', color: '#111', center: '♠', isAce: true },
+  { rank: 'K', suit: '♥', color: '#C0392B', center: '♥', isAce: false },
+  { rank: '7', suit: '♦', color: '#C0392B', center: '♦', isAce: false },
+];
+
+function setCardFace(idx, data) {
+  const cf = document.getElementById('cardFront'+idx);
+  const r = document.getElementById('rank'+idx);
+  const s = document.getElementById('suit'+idx);
+  const rb = document.getElementById('rank'+idx+'b');
+  const sb = document.getElementById('suit'+idx+'b');
+  const cs = document.getElementById('centerSuit'+idx);
+  r.textContent = data.rank;
+  r.style.color = data.color;
+  s.textContent = data.suit;
+  s.style.color = data.color;
+  rb.textContent = data.rank;
+  rb.style.color = data.color;
+  sb.textContent = data.suit;
+  sb.style.color = data.color;
+  cs.textContent = data.center;
+  cs.style.color = data.color;
+}
+
+// init faces
+cardData.forEach((d, i) => setCardFace(i, d));
+
+function dealCards() {
+  document.getElementById('gameSubtitle').textContent = 'Memorise the Ace of Spades…';
+  document.getElementById('statusText').textContent = 'Watch carefully…';
+  cards.forEach((c, i) => {
+    c.classList.remove('dealt','flipped','pressable','chosen','shuffle-left','shuffle-right','shuffle-reset');
+    c.style.transform = '';
+    c.style.transition = '';
+    c.style.opacity = '';
+    c.style.pointerEvents = 'none';
+  });
+
+  setTimeout(() => {
+    cards.forEach(c => c.classList.add('dealt'));
+    // Flip face up after deal
+    setTimeout(() => {
+      cards.forEach(c => c.classList.add('flipped'));
+      document.getElementById('gameSubtitle').textContent = 'Remember it — then they shuffle!';
+      // flip back down
+      setTimeout(() => {
+        cards.forEach(c => c.classList.remove('flipped'));
+        setTimeout(doShuffle, 500);
+      }, 1600);
+    }, 700);
+  }, 100);
+}
+
+function doShuffle() {
+  document.getElementById('statusText').textContent = 'Shuffling…';
+  document.getElementById('gameSubtitle').textContent = 'Can you track it?';
+
+  const shuffleSequence = [
+    [[0,2],[1]],
+    [[1],[0,2]],
+    [[0,1],[2]],
+    [[2],[0,1]],
+    [[0,2],[1]],
+  ];
+
+  let step = 0;
+  function nextStep() {
+    if (step >= shuffleSequence.length) {
+      // done
+      setTimeout(enablePick, 400);
+      return;
     }
-    window.addEventListener('resize',resize,{passive:true});
-    resize();
+    const [lefts, rights] = shuffleSequence[step];
+    cards.forEach((c,i) => {
+      c.classList.remove('shuffle-left','shuffle-right','shuffle-reset');
+      if (lefts.includes(i)) c.classList.add('shuffle-left');
+      else if (rights.includes(i)) c.classList.add('shuffle-right');
+    });
+    step++;
+    setTimeout(() => {
+      cards.forEach(c => {
+        c.classList.remove('shuffle-left','shuffle-right');
+        c.classList.add('shuffle-reset');
+      });
+      setTimeout(nextStep, 380);
+    }, 380);
+  }
+  nextStep();
+}
+
+function enablePick() {
+  document.getElementById('statusText').textContent = '↑  Tap your card  ↑';
+  document.getElementById('gameSubtitle').textContent = 'Pick a card. Find the Ace.';
+  cards.forEach((c) => {
+    c.classList.add('pressable');
+    c.style.pointerEvents = 'auto';
+    c.style.cursor = 'pointer';
+  });
+  cards.forEach((c, i) => {
+    c.addEventListener('touchend', onCardPick, { once: true });
+    c.addEventListener('click', onCardPick, { once: true });
+  });
+}
+
+function onCardPick(e) {
+  e.preventDefault();
+  const cardEl = e.currentTarget;
+  const picked = cards.indexOf(cardEl);
+
+  // remove listeners from others
+  cards.forEach(c => {
+    c.style.pointerEvents = 'none';
+    c.removeEventListener('touchend', onCardPick);
+    c.removeEventListener('click', onCardPick);
+  });
+
+  cardEl.classList.add('chosen');
+  document.getElementById('statusText').textContent = '✦';
+
+  // Always show ace on picked card — swap card face data secretly
+  setCardFace(picked, { rank: 'A', suit: '♠', color: '#111', center: '♠', isAce: true });
+
+  setTimeout(() => {
+    cardEl.classList.add('flipped');
+    setTimeout(showSuccess, 700);
+  }, 250);
+}
+
+function showSuccess() {
+  startConfetti();
+  const overlay = document.getElementById('successOverlay');
+  overlay.classList.add('visible');
+  // progress bar
+  setTimeout(() => {
+    document.getElementById('progressFill').style.width = '100%';
+  }, 80);
+  // go to screen 3
+  setTimeout(() => {
+    stopConfetti();
+    goToRickroll();
+  }, 2000);
+}
+
+// ─── Confetti ───
+let confettiAnim;
+const confettiCanvas = document.getElementById('confettiCanvas');
+const ctx = confettiCanvas.getContext('2d');
+let particles = [];
+
+function startConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+  particles = [];
+  const colors = ['#A78BFA','#FCD34D','#F59E0B','#8B5CF6','#FFFFFF','#34D399'];
+  for (let i=0; i<120; i++) {
+    particles.push({
+      x: Math.random() * confettiCanvas.width,
+      y: -10 - Math.random() * 100,
+      w: 6 + Math.random()*6,
+      h: 3 + Math.random()*4,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      vx: (Math.random()-0.5)*4,
+      vy: 3 + Math.random()*5,
+      rot: Math.random()*360,
+      rotV: (Math.random()-0.5)*8,
+      opacity: 1,
+    });
+  }
+  function draw() {
+    ctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+    particles.forEach(p => {
+      ctx.save();
+      ctx.globalAlpha = p.opacity;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.rotV;
+      p.vy += 0.15;
+      if (p.y > confettiCanvas.height - 30) p.opacity -= 0.04;
+    });
+    particles = particles.filter(p => p.opacity > 0);
+    confettiAnim = requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function stopConfetti() {
+  cancelAnimationFrame(confettiAnim);
+  ctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+}
+
+// ─── Screen 3: Rick Roll ───
+function goToRickroll() {
+  showScreen('screen3');
+  const splash = document.getElementById('prizeSplash');
+  const frame = document.getElementById('ytFrame');
+  // Load iframe after splash
+  setTimeout(() => {
+    frame.src = 'https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&playsinline=1';
+    frame.classList.add('visible');
+    setTimeout(() => {
+      splash.classList.add('hidden');
+    }, 600);
+  }, 1100);
+}
+</script>
 
-    // ===== UI refs =====
-    const overlay=document.getElementById('overlay');
-    const startBtn=document.getElementById('startBtn');
-    const scoreTxt=document.getElementById('scoreTxt');
-    const highTxt=document.getElementById('highTxt');
-
-    // High score while tab is open => sessionStorage
-    const HS_KEY='AS_HIGH_SCORE_V2';
-    let highScore=Number(sessionStorage.getItem(HS_KEY)||0);
-    highTxt.textContent=String(highScore);
-
-    // ===== Game tuning (changed) =====
-    const TUNE = {
-      zoneHeightFrac: 0.30,     // bottom zone height fraction
-      cradleYFrac: 0.82,        // ball "ready" height (higher than before)
-      maxPullFrac: 0.32,        // pull distance relative to screen height
-      maxPullPxCap: 280,        // hard cap so it’s consistent
-      launchSpeedMin: 820,      // stronger than before
-      launchSpeedMax: 1550,     // much stronger
-      upwardBiasMin: 520,       // ensures vertical oomph
-      shotCooldown: 0.06,       // rapid-fire: minimum time between shots
-      ballAutoResetY: 0.88      // if a shot ball falls below this, reset it
-    };
-
-    // ===== Game state =====
-    let running=false;
-    let gameOver=false;
-    let score=0;
-
-    // Slingshot zone top line
-    function zoneTop(){ return H*(1 - TUNE.zoneHeightFrac); }
-
-    // ===== Stars =====
-    const stars=[];
-    function initStars(){
-      stars.length=0;
-      const n=Math.floor((W*H)/14000);
-      for(let i=0;i<n;i++){
-        stars.push({x:Math.random()*W,y:Math.random()*H,r:rand(0.6,1.6),s:rand(0.12,0.5)});
-      }
-    }
-
-    // ===== Balls (changed to rapid-fire multi-ball) =====
-    const balls=[]; // active shots
-    function readyBallPos(){
-      return { x: W*0.5, y: H*TUNE.cradleYFrac };
-    }
-
-    // the "ready ball" you pull from
-    const readyBall = { x:0,y:0,r:10 };
-    function resetReadyBall(){
-      const p=readyBallPos();
-      readyBall.x=p.x; readyBall.y=p.y;
-      readyBall.r=clamp(Math.min(W,H)*0.018,8,12);
-    }
-    resetReadyBall();
-
-    // cooldown
-    let sinceShot=999;
-
-    // ===== Asteroids =====
-    const asteroids=[];
-    let spawnTimer=0, spawnEvery=900, speedBase=140;
-
-    // ===== Particles =====
-    const particles=[];
-
-    // ===== Input =====
-    let pointerDown=false;
-    let pullStart={x:0,y:0};
-    let pullNow={x:0,y:0};
-    let pullPower=0;   // 0..1
-    let pullValid=false;
-
-    // ===== Audio =====
-    let audioCtx=null;
-    function beep(freq=440,dur=0.05,type='sine',gain=0.03){
-      try{
-        if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-        const t0=audioCtx.currentTime;
-        const o=audioCtx.createOscillator();
-        const g=audioCtx.createGain();
-        o.type=type;
-        o.frequency.setValueAtTime(freq,t0);
-        g.gain.setValueAtTime(gain,t0);
-        g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(t0); o.stop(t0+dur);
-      }catch{}
-    }
-
-    // ===== Game functions =====
-    function resetGame(){
-      score=0; scoreTxt.textContent='0';
-      asteroids.length=0;
-      particles.length=0;
-      balls.length=0;
-
-      spawnTimer=0; spawnEvery=900; speedBase=140;
-      pointerDown=false; pullPower=0; pullValid=false;
-      sinceShot=999;
-
-      gameOver=false;
-      resetReadyBall();
-    }
-
-    function endGame(){
-      running=false; gameOver=true;
-
-      if(score>highScore){
-        highScore=score;
-        sessionStorage.setItem(HS_KEY,String(highScore));
-        highTxt.textContent=String(highScore);
-      }
-
-      overlay.style.display='grid';
-      const h1=overlay.querySelector('h1');
-      const p=overlay.querySelector('p');
-      h1.textContent = (score>=highScore && score>0) ? 'New High Score!' : 'Game Over';
-      p.innerHTML = `<b>Shoot the asteroids.</b> Score: <b>${score}</b> • High: <b>${highScore}</b>`;
-      startBtn.textContent='Try again';
-    }
-
-    function spawnAsteroid(){
-      const r=rand(14,26)*(Math.min(W,H)/700);
-      const x=rand(r+8,W-r-8);
-      const y=-r-8;
-      const drift=rand(-50,50);
-      const speed=speedBase+rand(0,90)+Math.min(260,score*1.25);
-      asteroids.push({x,y,r,vx:drift,vy:speed,spin:rand(-3,3),a:rand(0,Math.PI*2)});
-    }
-
-    function explode(x,y,base=14){
-      const n=Math.floor(base+rand(0,base));
-      for(let i=0;i<n;i++){
-        const ang=rand(0,Math.PI*2);
-        const sp=rand(80,320);
-        particles.push({x,y,vx:Math.cos(ang)*sp,vy:Math.sin(ang)*sp,r:rand(1.2,2.8),life:rand(0.25,0.6),t:0});
-      }
-    }
-
-    function shootFromPull(){
-      if(!pullValid) return;
-      if(sinceShot < TUNE.shotCooldown) return;
-
-      const dx=pullStart.x - pullNow.x;
-      const dy=pullStart.y - pullNow.y;
-      const mag=Math.hypot(dx,dy);
-      if(mag<10) return;
-
-      const maxPull = Math.min(H*TUNE.maxPullFrac, TUNE.maxPullPxCap);
-      const raw = mag;
-
-      // prefer pulls that go downward (dy positive means user dragged down)
-      const downBias = dy < 0 ? 0.25 : 1.0;
-
-      pullPower = clamp((raw * downBias) / maxPull, 0, 1);
-
-      const dirx=dx/mag;
-      const diry=dy/mag;
-
-      const speed = TUNE.launchSpeedMin + (TUNE.launchSpeedMax - TUNE.launchSpeedMin) * pullPower;
-
-      // spawn a new shot ball immediately (rapid-fire)
-      const sx = clamp(pullStart.x, readyBall.r+2, W-readyBall.r-2);
-      const sy = clamp(pullStart.y, zoneTop()+readyBall.r+8, H-readyBall.r-8);
-
-      let vx = dirx * speed;
-      let vy = diry * speed;
-
-      // Strong upward bias so even messy pulls feel good
-      if(vy > -TUNE.upwardBiasMin) vy = -TUNE.upwardBiasMin - 680 * pullPower;
-
-      balls.push({ x:sx, y:sy, vx, vy, r:readyBall.r, alive:true });
-
-      sinceShot = 0;
-      beep(560,0.04,'triangle',0.03);
-
-      // instantly "re-ready" a new ball
-      // (visually, ready ball stays there; we just allow immediate next pull)
-    }
-
-    // ===== Input handlers =====
-    function getPoint(e){
-      if(e.touches && e.touches[0]) return {x:e.touches[0].clientX,y:e.touches[0].clientY};
-      return {x:e.clientX,y:e.clientY};
-    }
-
-    function onDown(e){
-      if(!running) return;
-      const p=getPoint(e);
-      pointerDown=true;
-      pullStart=p;
-      pullNow=p;
-      pullPower=0;
-      pullValid = (p.y >= zoneTop());
-      // If press is above zone, still let them start lower by dragging into zone? Keep it strict for now.
-    }
-
-    function onMove(e){
-      if(!running || !pointerDown) return;
-      const p=getPoint(e);
-      pullNow=p;
-      if(!pullValid) return;
-
-      const dy=p.y - pullStart.y;
-      const dx=p.x - pullStart.x;
-      const raw=Math.hypot(dx,dy);
-      const downBias = dy < 0 ? 0.25 : 1.0;
-      const maxPull = Math.min(H*TUNE.maxPullFrac, TUNE.maxPullPxCap);
-      pullPower = clamp((raw * downBias) / maxPull, 0, 1);
-    }
-
-    function onUp(e){
-      if(!running) return;
-      if(pointerDown && pullValid) shootFromPull();
-      pointerDown=false;
-      pullPower=0;
-      pullValid=false;
-    }
-
-    canvas.addEventListener('pointerdown',(e)=>{canvas.setPointerCapture?.(e.pointerId);onDown(e);},{passive:true});
-    canvas.addEventListener('pointermove',onMove,{passive:true});
-    canvas.addEventListener('pointerup',onUp,{passive:true});
-    canvas.addEventListener('pointercancel',onUp,{passive:true});
-
-    document.addEventListener('touchmove',(e)=>{ if(running) e.preventDefault(); },{passive:false});
-
-    // ===== Main loop =====
-    let lastT=0;
-    function step(t){
-      requestAnimationFrame(step);
-      const dt=Math.min(0.033,(t-lastT)/1000 || 0.016);
-      lastT=t;
-
-      // stars drift
-      for(const s of stars){
-        s.y += s.s*60*dt;
-        if(s.y > H+2){ s.y=-2; s.x=Math.random()*W; }
-      }
-
-      if(running && !gameOver) update(dt);
-      render(dt);
-    }
-
-    function update(dt){
-      sinceShot += dt;
-
-      // difficulty
-      spawnEvery = clamp(900 - score*2.2, 260, 900);
-      speedBase  = 140 + Math.min(240, score*0.95);
-
-      // spawn asteroids
-      spawnTimer += dt*1000;
-      while(spawnTimer >= spawnEvery){
-        spawnTimer -= spawnEvery;
-        spawnAsteroid();
-        if(Math.random()<0.14) spawnAsteroid();
-      }
-
-      // update shot balls
-      for(let i=balls.length-1;i>=0;i--){
-        const b=balls[i];
-        b.vy += 620*dt; // a bit more gravity so it comes back faster
-        b.x  += b.vx*dt;
-        b.y  += b.vy*dt;
-
-        // wall bounce
-        if(b.x < b.r){ b.x=b.r; b.vx*=-0.85; }
-        if(b.x > W-b.r){ b.x=W-b.r; b.vx*=-0.85; }
-        if(b.y < b.r){ b.y=b.r; b.vy*=-0.82; }
-
-        // quick cleanup if it falls below a threshold (rapid reset feel)
-        if(b.y > H*TUNE.ballAutoResetY + 120){
-          balls.splice(i,1);
-          continue;
-        }
-
-        // collisions with asteroids
-        for(let j=asteroids.length-1;j>=0;j--){
-          const a=asteroids[j];
-          const rr = a.r + b.r;
-          if(dist2(a.x,a.y,b.x,b.y) <= rr*rr){
-            score += 10;
-            scoreTxt.textContent=String(score);
-
-            // kick ball a bit
-            const nx=b.x-a.x, ny=b.y-a.y;
-            const nm=Math.hypot(nx,ny)||1;
-            b.vx += (nx/nm)*140;
-            b.vy += (ny/nm)*140;
-
-            explode(a.x,a.y,16);
-            beep(240 + Math.min(900, score*2), 0.04, 'square', 0.025);
-
-            asteroids.splice(j,1);
-            break;
-          }
-        }
-      }
-
-      // update asteroids
-      const bottomLine = zoneTop() + 12;
-      for(let i=asteroids.length-1;i>=0;i--){
-        const a=asteroids[i];
-        a.a += a.spin*dt;
-        a.x += a.vx*dt;
-        a.y += a.vy*dt;
-        if(a.x < -a.r) a.x = W + a.r;
-        if(a.x > W + a.r) a.x = -a.r;
-
-        if(a.y + a.r >= bottomLine){
-          explode(a.x,a.y,22);
-          beep(120,0.12,'sawtooth',0.03);
-          endGame();
-          break;
-        }
-
-        if(a.y - a.r > H + 200) asteroids.splice(i,1);
-      }
-
-      // particles
-      for(let i=particles.length-1;i>=0;i--){
-        const p=particles[i];
-        p.t += dt;
-        p.x += p.vx*dt;
-        p.y += p.vy*dt;
-        p.vx *= Math.pow(0.08, dt);
-        p.vy *= Math.pow(0.08, dt);
-        if(p.t >= p.life) particles.splice(i,1);
-      }
-    }
-
-    function render(dt){
-      ctx.fillStyle='#070A12';
-      ctx.fillRect(0,0,W,H);
-
-      // vignette
-      const vg=ctx.createRadialGradient(W*0.5,H*0.35,10,W*0.5,H*0.5,Math.max(W,H));
-      vg.addColorStop(0,'rgba(120,160,255,0.08)');
-      vg.addColorStop(0.6,'rgba(0,0,0,0)');
-      vg.addColorStop(1,'rgba(0,0,0,0.55)');
-      ctx.fillStyle=vg;
-      ctx.fillRect(0,0,W,H);
-
-      // stars
-      ctx.fillStyle='rgba(255,255,255,0.75)';
-      for(const s of stars){
-        ctx.globalAlpha=clamp(0.35 + s.r*0.25,0.25,0.9);
-        ctx.beginPath();
-        ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-        ctx.fill();
-      }
-      ctx.globalAlpha=1;
-
-      // pull guide
-      if(running && pointerDown && pullValid){
-        const sx=pullStart.x, sy=pullStart.y;
-        const ex=pullNow.x,   ey=pullNow.y;
-
-        ctx.lineWidth=3; ctx.lineCap='round';
-        ctx.strokeStyle=`rgba(255,255,255,${0.20 + 0.45*pullPower})`;
-        ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
-
-        ctx.strokeStyle=`rgba(120,160,255,${0.22 + 0.55*pullPower})`;
-        ctx.lineWidth=7;
-        ctx.beginPath(); ctx.arc(sx,sy,12 + 34*pullPower,0,Math.PI*2); ctx.stroke();
-      }
-
-      // asteroids
-      for(const a of asteroids){
-        const ag=ctx.createRadialGradient(a.x-a.r*0.25,a.y-a.r*0.25,2,a.x,a.y,a.r*1.2);
-        ag.addColorStop(0,'rgba(255,255,255,0.18)');
-        ag.addColorStop(0.4,'rgba(180,190,210,0.14)');
-        ag.addColorStop(1,'rgba(80,90,120,0.55)');
-        ctx.fillStyle=ag;
-        ctx.beginPath(); ctx.arc(a.x,a.y,a.r,0,Math.PI*2); ctx.fill();
-
-        ctx.globalAlpha=0.65;
-        ctx.fillStyle='rgba(0,0,0,0.25)';
-        for(let i=0;i<3;i++){
-          const cx=a.x + Math.cos(a.a+i)*a.r*0.35;
-          const cy=a.y + Math.sin(a.a*1.2+i*1.7)*a.r*0.25;
-          ctx.beginPath(); ctx.arc(cx,cy,a.r*rand(0.12,0.22),0,Math.PI*2); ctx.fill();
-        }
-        ctx.globalAlpha=1;
-
-        ctx.strokeStyle='rgba(255,255,255,0.10)';
-        ctx.lineWidth=2;
-        ctx.beginPath(); ctx.arc(a.x,a.y,a.r,0,Math.PI*2); ctx.stroke();
-      }
-
-      // shot balls
-      for(const b of balls){
-        const bg=ctx.createRadialGradient(b.x-b.r*0.3,b.y-b.r*0.3,2,b.x,b.y,b.r*1.6);
-        bg.addColorStop(0,'rgba(255,255,255,0.95)');
-        bg.addColorStop(0.4,'rgba(120,160,255,0.75)');
-        bg.addColorStop(1,'rgba(255,120,180,0.20)');
-        ctx.fillStyle=bg;
-        ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
-        ctx.strokeStyle='rgba(255,255,255,0.18)';
-        ctx.lineWidth=2;
-        ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.stroke();
-      }
-
-      // ready ball (always available)
-      if(running){
-        const rbX = pointerDown && pullValid ? pullStart.x : readyBall.x;
-        const rbY = pointerDown && pullValid ? pullStart.y : readyBall.y;
-        const r = readyBall.r;
-
-        const rg=ctx.createRadialGradient(rbX-r*0.3,rbY-r*0.3,2,rbX,rbY,r*1.6);
-        rg.addColorStop(0,'rgba(255,255,255,0.85)');
-        rg.addColorStop(0.4,'rgba(120,160,255,0.55)');
-        rg.addColorStop(1,'rgba(255,120,180,0.12)');
-        ctx.fillStyle=rg;
-        ctx.beginPath(); ctx.arc(rbX,rbY,r,0,Math.PI*2); ctx.fill();
-        ctx.strokeStyle='rgba(255,255,255,0.10)';
-        ctx.lineWidth=2;
-        ctx.beginPath(); ctx.arc(rbX,rbY,r,0,Math.PI*2); ctx.stroke();
-      }
-
-      // particles
-      for(const p of particles){
-        const a=1-(p.t/p.life);
-        ctx.globalAlpha=a;
-        ctx.fillStyle='rgba(255,255,255,0.9)';
-        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
-      }
-      ctx.globalAlpha=1;
-
-      // danger line
-      ctx.strokeStyle='rgba(255,255,255,0.10)';
-      ctx.lineWidth=2;
-      ctx.beginPath(); ctx.moveTo(0,zoneTop()); ctx.lineTo(W,zoneTop()); ctx.stroke();
-
-      // dim when not running
-      if(!running){
-        ctx.fillStyle='rgba(0,0,0,0.25)';
-        ctx.fillRect(0,0,W,H);
-      }
-    }
-
-    // ===== Start button =====
-    function startGame(){
-      overlay.style.display='none';
-      resetGame();
-      running=true;
-      gameOver=false;
-
-      // iOS audio unlock
-      if(!audioCtx){
-        try{
-          audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-          const o=audioCtx.createOscillator();
-          const g=audioCtx.createGain();
-          g.gain.value=0.00001;
-          o.connect(g); g.connect(audioCtx.destination);
-          o.start(); o.stop(audioCtx.currentTime+0.01);
-        }catch{}
-      }
-    }
-    startBtn.addEventListener('click',startGame);
-
-    // keep ready ball positioned on resize
-    window.addEventListener('resize', () => { resetReadyBall(); }, { passive:true });
-
-    requestAnimationFrame(step);
-  </script>
 </body>
 </html>
