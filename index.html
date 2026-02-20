@@ -1,1153 +1,1010 @@
 <!DOCTYPE html>
 
-<html lang="en" style="background:#08080D;">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<!-- Force dark regardless of OS setting -->
-<meta name="color-scheme" content="dark">
-<meta name="supported-color-schemes" content="dark">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<title>ARCANA · The Draw</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Oswald:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>You've Been Selected</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Cormorant+Garamond:wght@300;400;600;700&family=Outfit:wght@200;300;400;600;700&display=swap');
 
-/* ─── FORCE DARK ALWAYS ────────────────────────────── */
-:root {
-color-scheme: dark;
-forced-color-adjust: none;
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 
-–gold:        #C8A85A;
-–gold-hi:     #EACF82;
-–gold-lo:     #6B4E1A;
-–gold-soft:   rgba(200,168,90,0.12);
-–gold-glow:   rgba(200,168,90,0.30);
-–ink:         #08080D;
-–ink2:        #0D0D16;
-–ink3:        #13131E;
-–ink4:        #1A1A28;
-–ivory:       #F5F0E8;
-–ivory2:      #E8E0D0;
-–text:        #EEE8DC;
-–text-dim:    rgba(238,232,220,0.50);
-–text-ghost:  rgba(238,232,220,0.28);
-–border:      rgba(200,168,90,0.16);
-–border-hi:   rgba(200,168,90,0.40);
-–red:         #C0392B;
-–serif:       ‘Playfair Display’, Georgia, ‘Times New Roman’, serif;
-–sans:        ‘Oswald’, sans-serif;
+:root{
+–black:#050508;–deep:#0a0a12;–violet:#7c3aed;–violet-dark:#5b21b6;–violet-glow:#a855f7;
+–gold:#d4a843;–gold-light:#f0d78c;–gold-dark:#9a7b2f;
+–white:#f8f6f0;–glass:rgba(255,255,255,0.06);–glass-border:rgba(255,255,255,0.1);
+–card-red:#c0392b;–card-black:#1a1a2e;
 }
 
-/* Override any light-mode browser injection */
-@media (prefers-color-scheme: light) {
-:root { color-scheme: dark; }
-html, body { background: #08080D !important; filter: none !important; }
+html{height:100%;height:100dvh;overflow:hidden}
+body{
+height:100%;height:100dvh;width:100vw;overflow:hidden;
+background:var(–black);color:var(–white);
+font-family:‘Outfit’,sans-serif;
+position:fixed;top:0;left:0;right:0;bottom:0;
+overscroll-behavior:none;
+-webkit-overflow-scrolling:auto;
+touch-action:none;
 }
 
-*, *::before, *::after {
-box-sizing: border-box;
-margin: 0; padding: 0;
--webkit-tap-highlight-color: transparent;
--webkit-touch-callout: none;
--webkit-user-select: none;
-user-select: none;
+.screen{
+position:absolute;top:0;left:0;width:100%;height:100%;height:100dvh;
+display:none;flex-direction:column;align-items:center;justify-content:center;
+overflow:hidden;z-index:1;
+}
+.screen.active{display:flex}
+
+/* ===== CURTAIN TRANSITION ===== */
+.curtain{
+position:fixed;top:0;left:0;width:100%;height:100%;height:100dvh;z-index:1000;
+pointer-events:none;display:flex;
+}
+.curtain-left,.curtain-right{
+width:50%;height:100%;
+background:linear-gradient(135deg,#0c0c18 0%,#1a1030 50%,#0c0c18 100%);
+transform:scaleX(0);
+will-change:transform;
+}
+.curtain-left{transform-origin:left center}
+.curtain-right{transform-origin:right center}
+.curtain.closing .curtain-left,.curtain.closing .curtain-right{
+animation:curtainClose 0.5s cubic-bezier(0.65,0,0.35,1) forwards;
+}
+.curtain.opening .curtain-left,.curtain.opening .curtain-right{
+animation:curtainOpen 0.5s cubic-bezier(0.65,0,0.35,1) forwards;
+}
+@keyframes curtainClose{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes curtainOpen{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+
+.curtain-emblem{
+position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+z-index:1001;opacity:0;pointer-events:none;
+font-family:‘Playfair Display’,serif;font-size:2.5rem;font-weight:900;
+color:var(–gold);text-shadow:0 0 30px rgba(212,168,67,0.5);
+letter-spacing:0.15em;
+}
+.curtain.closing .curtain-emblem{
+animation:emblemIn 0.3s 0.4s ease-out forwards;
+}
+.curtain.opening .curtain-emblem{
+animation:emblemOut 0.2s ease-in forwards;
+}
+@keyframes emblemIn{from{opacity:0;transform:translate(-50%,-50%) scale(0.8)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes emblemOut{from{opacity:1;transform:translate(-50%,-50%) scale(1)}to{opacity:0;transform:translate(-50%,-50%) scale(1.1)}}
+
+/* ===== SCREEN 1 — THE HOOK ===== */
+#screen1{background:var(–black)}
+
+.bg-canvas{
+position:absolute;top:0;left:0;width:100%;height:100%;
 }
 
-html {
-width: 100%; height: 100%;
-background: var(–ink);
-/* prevent Safari elastic scroll on the HTML element */
-overflow: hidden;
-position: fixed;
-top: 0; left: 0; right: 0; bottom: 0;
+.hero-content{
+position:relative;z-index:2;
+display:flex;flex-direction:column;align-items:center;gap:1.5rem;
+padding:0 2rem;
 }
 
-body {
-width: 100%; height: 100%;
-overflow: hidden;
-overscroll-behavior: none;
-background: var(–ink);
-touch-action: none;
-position: fixed;
-inset: 0;
-font-family: var(–sans);
--webkit-font-smoothing: antialiased;
+.hero-badge{
+font-family:‘Outfit’,sans-serif;font-weight:300;font-size:0.7rem;
+letter-spacing:0.4em;text-transform:uppercase;
+color:var(–gold);opacity:0.7;
+border:1px solid var(–gold-dark);
+padding:0.4rem 1.2rem;border-radius:100px;
+backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+background:rgba(212,168,67,0.05);
+animation:fadeSlideUp 1s 0.3s ease-out both;
 }
 
-/* ─── SCREEN MANAGER ───────────────────────────────── */
-.screen {
-position: absolute;
-inset: 0;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-overflow: hidden;
-opacity: 0;
-pointer-events: none;
-transition: opacity 0.85s cubic-bezier(0.4, 0, 0.2, 1);
-background: var(–ink); /* ensures black even if page bg shows */
-}
-.screen.active {
-opacity: 1;
-pointer-events: all;
+.hero-title{
+font-family:‘Playfair Display’,serif;font-weight:900;
+font-size:clamp(1.8rem,6vw,3rem);text-align:center;
+line-height:1.15;letter-spacing:-0.01em;
+background:linear-gradient(135deg,var(–white) 0%,var(–gold-light) 50%,var(–white) 100%);
+background-size:200% 200%;
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+background-clip:text;
+animation:fadeSlideUp 1s 0.5s ease-out both,shimmerText 4s ease-in-out infinite;
 }
 
-/* ─── BACKGROUND LAYER (shared) ────────────────────── */
-.bg {
-position: absolute;
-inset: 0;
-background: var(–ink);
-overflow: hidden;
-pointer-events: none;
-}
-.bg-top-glow {
-position: absolute;
-top: -20%;
-left: 50%;
-transform: translateX(-50%);
-width: 90%;
-height: 55%;
-background: radial-gradient(ellipse at 50% 0%, rgba(200,168,90,0.07) 0%, transparent 70%);
-}
-.bg-bot-glow {
-position: absolute;
-bottom: -20%;
-left: 50%;
-transform: translateX(-50%);
-width: 90%;
-height: 55%;
-background: radial-gradient(ellipse at 50% 100%, rgba(200,168,90,0.05) 0%, transparent 70%);
-}
-.bg-dots {
-position: absolute;
-inset: 0;
-background-image: radial-gradient(circle, rgba(200,168,90,0.10) 1px, transparent 1px);
-background-size: 30px 30px;
-mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 20%, transparent 100%);
--webkit-mask-image: radial-gradient(ellipse 75% 75% at 50% 50%, black 20%, transparent 100%);
-}
-.bg-vignette {
-position: absolute;
-inset: 0;
-background: radial-gradient(ellipse 110% 110% at 50% 50%,
-transparent 35%, rgba(0,0,0,0.55) 75%, rgba(0,0,0,0.85) 100%);
+@keyframes shimmerText{
+0%,100%{background-position:0% 50%}
+50%{background-position:100% 50%}
 }
 
-/* ═══════════════════════════════════════════════════════
-SCREEN 1 — HOOK
-═══════════════════════════════════════════════════════ */
-#s1 { gap: 0; }
-
-.s1-badge {
-font-size: 9px;
-font-weight: 400;
-letter-spacing: 0.58em;
-color: var(–gold);
-text-transform: uppercase;
-opacity: 0.65;
-margin-bottom: 32px;
-animation: riseFade 1s 0.15s both;
-}
-
-.s1-spade {
-font-size: 52px;
-line-height: 1;
-color: var(–gold);
-margin-bottom: 22px;
-animation: riseFade 1s 0.3s both;
-filter: drop-shadow(0 0 22px var(–gold-glow));
-}
-
-.s1-title {
-font-family: var(–serif);
-font-size: clamp(60px, 17vw, 92px);
-font-weight: 900;
-line-height: 0.87;
-letter-spacing: -0.025em;
-color: var(–text);
-text-align: center;
-margin-bottom: 4px;
-animation: riseFade 1s 0.45s both;
-}
-.s1-title em {
-font-style: italic;
-background: linear-gradient(135deg, var(–gold-hi) 0%, var(–gold) 100%);
--webkit-background-clip: text;
--webkit-text-fill-color: transparent;
-background-clip: text;
-}
-
-.s1-line {
-width: 48px;
-height: 1px;
-background: linear-gradient(90deg, transparent, var(–gold), transparent);
-margin: 28px auto;
-animation: riseFade 1s 0.55s both;
-}
-
-.s1-sub {
-font-family: var(–serif);
-font-size: 15px;
-font-style: italic;
-color: var(–text-dim);
-letter-spacing: 0.03em;
-margin-bottom: 56px;
-animation: riseFade 1s 0.65s both;
-}
-
-.begin-btn {
-position: relative;
-font-family: var(–sans);
-font-size: 11px;
-font-weight: 500;
-letter-spacing: 0.48em;
-text-transform: uppercase;
-color: var(–ink);
-background: linear-gradient(160deg, var(–gold-hi) 0%, var(–gold) 100%);
-border: none;
-border-radius: 3px;
-padding: 19px 52px 17px;
-cursor: pointer;
-outline: none;
--webkit-appearance: none;
-animation: riseFade 1s 0.8s both, btnBreathe 3.2s 1.8s ease-in-out infinite;
-transition: transform 0.14s ease;
+.push-btn{
+position:relative;width:180px;height:180px;
+border-radius:50%;border:none;cursor:pointer;
+background:radial-gradient(circle at 40% 35%,rgba(124,58,237,0.4),transparent 60%),
+radial-gradient(circle at center,var(–deep),var(–black));
 box-shadow:
-0 0 0 1px rgba(200,168,90,0.6),
-0 0 0 4px rgba(200,168,90,0.06),
-0 8px 36px rgba(0,0,0,0.55),
-0 0 48px var(–gold-glow);
+0 0 0 2px var(–violet-dark),
+0 0 30px rgba(124,58,237,0.3),
+0 0 60px rgba(124,58,237,0.15),
+inset 0 0 40px rgba(124,58,237,0.1);
+animation:fadeSlideUp 1s 0.7s ease-out both;
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+gap:0.3rem;
+-webkit-tap-highlight-color:transparent;
+transition:transform 0.1s ease,box-shadow 0.3s ease;
 }
-/* Inset sheen */
-.begin-btn::before {
-content: ‘’;
-position: absolute;
-inset: 0;
-border-radius: 3px;
-background: linear-gradient(to bottom, rgba(255,255,255,0.18) 0%, transparent 60%);
-pointer-events: none;
+.push-btn::before{
+content:’’;position:absolute;inset:-8px;border-radius:50%;
+border:1px solid rgba(124,58,237,0.2);
+animation:pulseRing 2.5s ease-in-out infinite;
 }
-.begin-btn:active { transform: scale(0.94); }
-
-@keyframes btnBreathe {
-0%,100% { box-shadow: 0 0 0 1px rgba(200,168,90,0.6), 0 0 0 4px rgba(200,168,90,0.06), 0 8px 36px rgba(0,0,0,0.55), 0 0 48px var(–gold-glow); }
-50%     { box-shadow: 0 0 0 1px rgba(200,168,90,0.6), 0 0 0 4px rgba(200,168,90,0.08), 0 8px 36px rgba(0,0,0,0.55), 0 0 80px rgba(200,168,90,0.5); }
+.push-btn::after{
+content:’’;position:absolute;inset:-20px;border-radius:50%;
+border:1px solid rgba(124,58,237,0.08);
+animation:pulseRing 2.5s 0.5s ease-in-out infinite;
 }
-
-.s1-hint {
-font-size: 9px;
-font-weight: 300;
-letter-spacing: 0.32em;
-color: var(–text-ghost);
-text-transform: uppercase;
-margin-top: 22px;
-animation: riseFade 1s 1s both;
+@keyframes pulseRing{
+0%,100%{transform:scale(1);opacity:1}
+50%{transform:scale(1.08);opacity:0.4}
 }
 
-/* ═══════════════════════════════════════════════════════
-SCREEN 2 — CARD GAME
-═══════════════════════════════════════════════════════ */
-#s2 { justify-content: flex-start; }
+.push-btn:active{transform:scale(0.95);box-shadow:0 0 0 2px var(–violet),0 0 50px rgba(124,58,237,0.6),inset 0 0 60px rgba(124,58,237,0.3)}
 
-.g-top {
-position: relative; z-index: 2;
-width: 100%;
-text-align: center;
-padding: 56px 28px 0;
+.btn-text{
+font-family:‘Outfit’,sans-serif;font-weight:700;font-size:0.85rem;
+letter-spacing:0.35em;color:var(–white);text-transform:uppercase;
 }
-.g-eyebrow {
-font-size: 9px;
-font-weight: 400;
-letter-spacing: 0.55em;
-color: var(–gold);
-text-transform: uppercase;
-opacity: 0.6;
-margin-bottom: 10px;
-}
-.g-title {
-font-family: var(–serif);
-font-size: clamp(26px, 8vw, 38px);
-font-weight: 700;
-color: var(–text);
-line-height: 1.08;
-margin-bottom: 10px;
-}
-.g-instr {
-font-size: 11px;
-font-weight: 300;
-letter-spacing: 0.18em;
-color: var(–text-dim);
-text-transform: uppercase;
-min-height: 16px;
-transition: opacity 0.35s ease;
+.btn-sub{
+font-family:‘Outfit’,sans-serif;font-weight:200;font-size:0.6rem;
+letter-spacing:0.25em;color:rgba(255,255,255,0.4);text-transform:uppercase;
 }
 
-/* Stage: card area */
-.stage {
-position: relative; z-index: 2;
-flex: 1;
-width: 100%;
-display: flex;
-align-items: center;
-justify-content: center;
-perspective: 1400px;
-padding: 16px 8px;
+.hero-sub{
+font-family:‘Cormorant Garamond’,serif;font-weight:300;font-style:italic;
+font-size:1.05rem;color:rgba(255,255,255,0.35);
+letter-spacing:0.05em;
+animation:fadeSlideUp 1s 0.9s ease-out both;
 }
 
-.cards-row {
-display: flex;
-align-items: flex-end;
-justify-content: center;
-gap: 12px;
-width: 100%;
+@keyframes fadeSlideUp{
+from{opacity:0;transform:translateY(20px)}
+to{opacity:1;transform:translateY(0)}
 }
 
-/* ── INDIVIDUAL CARD ─────────────────────────── */
-.cw {
-flex: 0 0 auto;
-width: clamp(92px, 27vw, 118px);
-aspect-ratio: 5/7;
-perspective: 900px;
-opacity: 0;
-transform: translateY(-130%) rotate(var(–r, 0deg));
-will-change: transform, opacity;
+/* Glow pulse on the button */
+.push-btn .glow-pulse{
+position:absolute;inset:0;border-radius:50%;
+background:radial-gradient(circle,rgba(168,85,247,0.25),transparent 70%);
+animation:glowPulse 2s ease-in-out infinite;
+pointer-events:none;
 }
-.cw:nth-child(1) { –r: -3deg; }
-.cw:nth-child(2) { –r:  0deg; margin-bottom: 10px; }
-.cw:nth-child(3) { –r:  3deg; }
-
-/* Deal animation */
-.cw.deal-in {
-animation: cardIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
-}
-.cw.deal-in:nth-child(1) { animation-delay: 0.00s; }
-.cw.deal-in:nth-child(2) { animation-delay: 0.11s; }
-.cw.deal-in:nth-child(3) { animation-delay: 0.22s; }
-@keyframes cardIn {
-to { opacity: 1; transform: translateY(0) rotate(var(–r, 0deg)); }
+@keyframes glowPulse{
+0%,100%{opacity:0.4;transform:scale(0.95)}
+50%{opacity:1;transform:scale(1.05)}
 }
 
-.cw.pressable:active {
-transform: translateY(0) rotate(var(–r, 0deg)) scale(0.93) !important;
+/* ===== SCREEN 2 — CARD GAME ===== */
+#screen2{
+background:radial-gradient(ellipse at center,#0f0f20 0%,var(–black) 70%);
 }
 
-/* 3-D flip container */
-.ci { /* card-inner */
-position: relative;
-width: 100%; height: 100%;
-transform-style: preserve-3d;
-transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
-border-radius: 10px;
+.game-header{
+position:absolute;top:0;left:0;right:0;
+padding:clamp(2.5rem,8vw,4rem) 1.5rem 1rem;
+text-align:center;z-index:5;
 }
-.cw.flipped .ci { transform: rotateY(180deg); }
-
-/* Both faces */
-.cf { /* card-face */
-position: absolute;
-inset: 0;
-border-radius: 10px;
-backface-visibility: hidden;
--webkit-backface-visibility: hidden;
-overflow: hidden;
+.game-header h2{
+font-family:‘Playfair Display’,serif;font-weight:700;
+font-size:clamp(1.2rem,4.5vw,1.6rem);
+color:var(–white);letter-spacing:0.02em;
+opacity:0;animation:fadeSlideUp 0.8s 0.2s ease-out forwards;
+}
+.game-header p{
+font-family:‘Cormorant Garamond’,serif;font-weight:300;font-style:italic;
+font-size:0.95rem;color:rgba(255,255,255,0.4);margin-top:0.4rem;
+opacity:0;animation:fadeSlideUp 0.8s 0.4s ease-out forwards;
 }
 
-/* Back face ─────────────────── */
-.cb { /* card-back */
-background: var(–ink3);
-border: 1.5px solid var(–border-hi);
-box-shadow:
-0 10px 40px rgba(0,0,0,0.75),
-0 2px 0 rgba(255,255,255,0.04) inset;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-.cb-inner {
-position: absolute;
-inset: 8px;
-border: 1px solid rgba(200,168,90,0.18);
-border-radius: 6px;
-background-image:
-repeating-linear-gradient( 45deg, rgba(200,168,90,0.055) 0, rgba(200,168,90,0.055) 1px, transparent 1px, transparent 10px),
-repeating-linear-gradient(-45deg, rgba(200,168,90,0.055) 0, rgba(200,168,90,0.055) 1px, transparent 1px, transparent 10px);
-}
-.cb-sym {
-position: relative; z-index: 1;
-font-family: var(–serif);
-font-size: 28px; font-weight: 700; font-style: italic;
-color: rgba(200,168,90,0.28);
+.card-table{
+position:relative;width:100%;max-width:400px;
+height:280px;
+display:flex;align-items:center;justify-content:center;
+z-index:5;
 }
 
-/* Front face ─────────────────── */
-.cv { /* card-front */
-background: var(–ivory);
-transform: rotateY(180deg);
-border: 1px solid rgba(0,0,0,0.06);
-box-shadow: 0 10px 40px rgba(0,0,0,0.75), 0 1px 0 rgba(255,255,255,0.9) inset;
-display: grid;
-grid-template-rows: auto 1fr auto;
-padding: 8px;
-}
-.cc { /* corner */
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 0px;
-line-height: 1;
-}
-.cc.br { transform: rotate(180deg); align-self: end; justify-self: end; }
-.cr { /* rank */
-font-family: Georgia, ‘Times New Roman’, serif;
-font-size: clamp(14px, 4.2vw, 18px);
-font-weight: 700;
-line-height: 1;
-}
-.cs { /* suit small */
-font-size: clamp(9px, 2.5vw, 12px);
-line-height: 1;
-margin-top: 1px;
-}
-.k  { color: #1A1A1A; }
-.rd { color: var(–red); }
-.cmid {
-display: flex; align-items: center; justify-content: center;
-}
-.cmid-s {
-font-size: clamp(36px, 12vw, 52px);
-line-height: 1;
-filter: drop-shadow(0 2px 4px rgba(0,0,0,0.10));
+.card-slot{
+position:absolute;width:110px;height:160px;
+perspective:800px;cursor:pointer;
+will-change:transform;
+-webkit-tap-highlight-color:transparent;
 }
 
-/* chosen glow ring */
-.cw.chosen .ci {
-box-shadow: 0 0 0 2.5px var(–gold), 0 0 32px var(–gold-glow);
-border-radius: 10px;
+.card-inner{
+position:relative;width:100%;height:100%;
+transform-style:preserve-3d;
+transition:transform 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.card-inner.flipped{transform:rotateY(180deg)}
+
+.card-face{
+position:absolute;inset:0;border-radius:10px;
+-webkit-backface-visibility:hidden;backface-visibility:hidden;
+overflow:hidden;
 }
 
-/* ── GAME BOTTOM BAR ─────────────────────────── */
-.g-bot {
-position: relative; z-index: 2;
-text-align: center;
-padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
-height: 72px;
-display: flex; align-items: center; justify-content: center;
+/* Card Back */
+.card-back{
+background:linear-gradient(145deg,#1a1040,#0d0825);
+border:1.5px solid rgba(124,58,237,0.3);
+box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 15px rgba(124,58,237,0.1);
+display:flex;align-items:center;justify-content:center;
+}
+.card-back-pattern{
+width:85%;height:88%;border-radius:6px;
+border:1px solid rgba(124,58,237,0.15);
+background:
+repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(124,58,237,0.04) 4px,rgba(124,58,237,0.04) 5px),
+repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(124,58,237,0.04) 4px,rgba(124,58,237,0.04) 5px),
+radial-gradient(circle at center,rgba(124,58,237,0.08),transparent 70%);
+display:flex;align-items:center;justify-content:center;
+}
+.card-back-pattern::after{
+content:‘♠’;font-size:2rem;color:rgba(124,58,237,0.2);
 }
 
-/* ── WIN OVERLAY ─────────────────────────────── */
-#winOverlay {
-position: absolute; inset: 0; z-index: 20;
-display: flex; flex-direction: column;
-align-items: center; justify-content: center;
-background: rgba(8,8,13,0.88);
-backdrop-filter: blur(24px) saturate(1.3);
--webkit-backdrop-filter: blur(24px) saturate(1.3);
-opacity: 0; pointer-events: none;
-transition: opacity 0.5s ease;
-gap: 0;
+/* Card Front */
+.card-front{
+transform:rotateY(180deg);
+background:linear-gradient(170deg,#fffef5,#f0ebd8);
+border:1px solid #d4c9a8;
+box-shadow:0 8px 32px rgba(0,0,0,0.5);
+display:flex;flex-direction:column;
+padding:8px;color:#1a1a1a;
 }
-#winOverlay.show { opacity: 1; pointer-events: all; }
+.card-corner{
+display:flex;flex-direction:column;align-items:center;
+line-height:1;
+}
+.card-corner-rank{
+font-family:‘Playfair Display’,serif;font-weight:900;font-size:1.1rem;
+}
+.card-corner-suit{font-size:0.85rem;margin-top:-2px}
+.card-corner.bottom{
+align-self:flex-end;margin-top:auto;
+transform:rotate(180deg);
+}
+.card-center-suit{
+position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+font-size:3rem;
+}
+.card-front.red{color:var(–card-red)}
+.card-front.black{color:#1a1a2e}
 
-.wo-icon {
-font-size: 56px;
-margin-bottom: 18px;
-animation: popUp 0.55s cubic-bezier(0.34,1.56,0.64,1) both;
+/* The subtle “tell” glow on ace card */
+.card-slot.has-tell .card-back{
+box-shadow:0 8px 32px rgba(0,0,0,0.6),0 0 15px rgba(124,58,237,0.1),0 0 25px rgba(212,168,67,0.08);
 }
-.wo-heading {
-font-family: var(–serif);
-font-size: 34px; font-weight: 900; font-style: italic;
-color: var(–gold-hi);
-animation: popUp 0.5s 0.07s cubic-bezier(0.34,1.4,0.64,1) both;
-margin-bottom: 6px;
-}
-.wo-sub {
-font-size: 9px; font-weight: 400;
-letter-spacing: 0.48em;
-color: var(–text-ghost);
-text-transform: uppercase;
-animation: popUp 0.45s 0.14s ease both;
-margin-bottom: 44px;
-}
-.prog-wrap {
-width: 180px; height: 2px;
-background: rgba(255,255,255,0.07);
-border-radius: 2px; overflow: hidden;
-animation: popUp 0.4s 0.18s ease both;
-}
-.prog-fill {
-height: 100%; width: 0%;
-background: linear-gradient(90deg, var(–gold-lo), var(–gold-hi));
-border-radius: 2px;
-transition: width 1.7s cubic-bezier(0.4, 0, 0.2, 1);
+.card-slot.has-tell .card-back-pattern{
+border-color:rgba(212,168,67,0.12);
 }
 
-/* Confetti canvas */
-#confetti {
-position: absolute; inset: 0;
-z-index: 19; pointer-events: none;
+/* Shuffle motion blur trick */
+.card-slot.shuffling{
+filter:blur(0.5px);
 }
 
-/* ═══════════════════════════════════════════════════════
-SCREEN 3 — REVEAL (video inside a card)
-═══════════════════════════════════════════════════════ */
-#s3 { background: var(–ink); }
-
-/* Prize loading splash */
-.splash {
-position: absolute; inset: 0; z-index: 8;
-display: flex; flex-direction: column;
-align-items: center; justify-content: center; gap: 18px;
-background: var(–ink);
-transition: opacity 0.55s ease;
+/* ===== CONFETTI ===== */
+.confetti-container{
+position:fixed;top:0;left:0;width:100%;height:100%;
+pointer-events:none;z-index:50;overflow:hidden;
 }
-.splash.gone { opacity: 0; pointer-events: none; }
-
-.splash-gift { font-size: 54px; animation: floatGift 1.4s ease-in-out infinite alternate; }
-@keyframes floatGift {
-from { transform: translateY(0) scale(1); }
-to   { transform: translateY(-10px) scale(1.04); }
+.confetti-piece{
+position:absolute;width:10px;height:10px;
+top:-20px;
+animation:confettiFall linear forwards;
 }
-.splash-label {
-font-family: var(–serif);
-font-size: 22px; font-style: italic;
-color: var(–text); letter-spacing: 0.04em;
-}
-.splash-sub {
-font-size: 9px; font-weight: 300;
-letter-spacing: 0.45em; color: var(–text-ghost);
-text-transform: uppercase;
-}
-.spinner {
-width: 28px; height: 28px;
-border: 2px solid rgba(200,168,90,0.18);
-border-top-color: var(–gold);
-border-radius: 50%;
-animation: spin 0.72s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ── VIDEO CARD ───────────────────────────────── */
-.card-wrap-s3 {
-position: relative; z-index: 7;
-opacity: 0;
-transform: translateY(28px) scale(0.97);
-transition: opacity 0.7s cubic-bezier(0.4,0,0.2,1),
-transform 0.7s cubic-bezier(0.34,1.2,0.64,1);
-}
-.card-wrap-s3.reveal {
-opacity: 1; transform: translateY(0) scale(1);
-}
-.card-wrap-s3.reveal .vcard {
-animation: cardFloat 4.5s ease-in-out 0.5s infinite;
-}
-@keyframes cardFloat {
-0%,100% { transform: perspective(1000px) rotateX(1.5deg) translateY(0); }
-50%     { transform: perspective(1000px) rotateX(1.5deg) translateY(-7px); }
+@keyframes confettiFall{
+0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}
+80%{opacity:1}
+100%{transform:translateY(100dvh) rotate(720deg) scale(0.5);opacity:0}
 }
 
-/* The card itself */
-.vcard {
-position: relative;
-width: min(80vw, 330px);
-aspect-ratio: 5/7;
-border-radius: 16px;
-background: var(–ink3);
-border: 1.5px solid var(–border-hi);
-box-shadow:
-0 0 0 1px rgba(0,0,0,0.9),
-0 28px 70px rgba(0,0,0,0.85),
-0 0 70px rgba(200,168,90,0.12),
-inset 0 1px 0 rgba(255,255,255,0.06);
-display: grid;
-grid-template-rows: auto 3px 1fr 3px auto;
-overflow: hidden;
-transform: perspective(1000px) rotateX(1.5deg);
+/* ===== SUCCESS OVERLAY ===== */
+.success-overlay{
+position:absolute;inset:0;z-index:20;
+display:none;flex-direction:column;align-items:center;justify-content:center;
+background:rgba(5,5,8,0.92);
+backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+padding:2rem;gap:1.5rem;
+}
+.success-overlay.active{display:flex}
+
+.success-banner{
+font-family:‘Playfair Display’,serif;font-weight:900;
+font-size:clamp(1.5rem,5vw,2rem);text-align:center;
+color:var(–gold-light);
+animation:successPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes successPop{
+from{opacity:0;transform:scale(0.5)}
+to{opacity:1;transform:scale(1)}
 }
 
-/* Top / bottom header strips */
-.vs { /* vcard strip */
-display: flex;
-align-items: center;
-justify-content: space-between;
-padding: 10px 14px 8px;
-background: var(–ink3);
-position: relative; z-index: 2;
+.progress-container{
+width:80%;max-width:300px;
+display:flex;flex-direction:column;gap:0.6rem;
 }
-.vs.bot { transform: rotate(180deg); padding: 8px 14px 10px; }
-.vs-corner {
-display: flex; flex-direction: column;
-align-items: center; gap: 1px;
+.progress-bar-bg{
+width:100%;height:6px;border-radius:10px;
+background:rgba(255,255,255,0.08);overflow:hidden;
+border:1px solid rgba(255,255,255,0.05);
 }
-.vs-rank {
-font-family: Georgia, serif;
-font-size: 19px; font-weight: 700;
-color: var(–text);
-line-height: 1;
+.progress-bar-fill{
+height:100%;width:0%;border-radius:10px;
+background:linear-gradient(90deg,var(–violet),var(–gold));
+transition:width 0.1s linear;
 }
-.vs-suit { font-size: 12px; color: var(–text-dim); line-height: 1; }
-.vs-big  { font-size: 22px; color: rgba(200,168,90,0.35); }
-
-/* Thin gold separator lines */
-.vl { /* vcard line */
-background: linear-gradient(90deg, transparent, var(–border-hi), transparent);
-position: relative; z-index: 3;
+.progress-pct{
+font-family:‘Outfit’,sans-serif;font-weight:300;font-size:0.8rem;
+color:rgba(255,255,255,0.5);text-align:center;
+font-variant-numeric:tabular-nums;
+}
+.progress-status{
+font-family:‘Outfit’,sans-serif;font-weight:200;font-size:0.7rem;
+color:rgba(255,255,255,0.3);text-align:center;
+letter-spacing:0.05em;min-height:1em;
 }
 
-/* Video window */
-.vv { /* vcard video */
-position: relative;
-background: #000;
-overflow: hidden;
-/* no corner radius — lines handle the visual separation */
+/* ===== SCREEN 3 — RICKROLL ===== */
+#screen3{
+background:var(–black);
+justify-content:center;align-items:center;
+}
+.prize-splash{
+display:flex;flex-direction:column;align-items:center;gap:1rem;
+}
+.prize-splash .emoji{font-size:3rem;animation:bounce 0.8s ease-in-out infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.prize-splash p{
+font-family:‘Outfit’,sans-serif;font-weight:300;
+font-size:1rem;color:rgba(255,255,255,0.6);
+letter-spacing:0.1em;
+}
+.spinner{
+width:30px;height:30px;border-radius:50%;
+border:2px solid rgba(255,255,255,0.1);
+border-top-color:var(–gold);
+animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.video-container{
+position:absolute;inset:0;width:100%;height:100%;
+display:none;
+}
+.video-container.active{display:block}
+.video-container iframe{
+width:100%;height:100%;border:none;
 }
 
-/* The iframe fills the video window */
-.vv iframe {
-position: absolute;
-inset: 0;
-width: 100%;
-height: 100%;
-border: none;
-display: block;
+/* ===== TOAST ===== */
+.toast{
+position:fixed;top:clamp(3rem,10vw,5rem);left:50%;
+transform:translateX(-50%) translateY(-120%);
+z-index:999;
+background:rgba(20,20,35,0.95);
+border:1px solid var(–glass-border);
+backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+padding:0.6rem 1.4rem;border-radius:100px;
+font-family:‘Outfit’,sans-serif;font-weight:400;font-size:0.8rem;
+color:rgba(255,255,255,0.8);white-space:nowrap;
+box-shadow:0 8px 30px rgba(0,0,0,0.4);
+transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1),opacity 0.3s ease;
+opacity:0;
 }
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
-/* Tap-to-play overlay (iOS Safari autoplay fallback) */
-.ttp {
-position: absolute; inset: 0; z-index: 10;
-display: flex; flex-direction: column;
-align-items: center; justify-content: center; gap: 12px;
-background: rgba(8,8,13,0.75);
-backdrop-filter: blur(4px);
--webkit-backdrop-filter: blur(4px);
-cursor: pointer;
-transition: opacity 0.35s ease;
-}
-.ttp.gone { opacity: 0; pointer-events: none; }
-.ttp-play {
-width: 52px; height: 52px;
-background: var(–gold);
-border-radius: 50%;
-display: flex; align-items: center; justify-content: center;
-box-shadow: 0 0 30px var(–gold-glow);
-}
-.ttp-play svg { margin-left: 4px; }
-.ttp-text {
-font-size: 10px; font-weight: 400;
-letter-spacing: 0.4em;
-color: var(–text-dim);
-text-transform: uppercase;
-}
-
-/* SVG ornament corners */
-.vc-orn {
-position: absolute; z-index: 5;
-width: 28px; height: 28px;
-pointer-events: none;
-}
-.vc-orn svg { width: 100%; height: 100%; }
-.vc-orn.tl { top: 4px;    left: 4px; }
-.vc-orn.tr { top: 4px;    right: 4px;  transform: scaleX(-1); }
-.vc-orn.bl { bottom: 4px; left: 4px;   transform: scaleY(-1); }
-.vc-orn.br { bottom: 4px; right: 4px;  transform: scale(-1);  }
-
-/* Glow pool under card */
-.vcard-glow {
-position: absolute;
-bottom: -36px; left: 50%;
-transform: translateX(-50%);
-width: 55%; height: 40px;
-background: radial-gradient(ellipse at 50% 100%, rgba(200,168,90,0.35), transparent 70%);
-filter: blur(16px);
-animation: glowPulse 4.5s ease-in-out infinite;
-pointer-events: none;
-}
-@keyframes glowPulse {
-0%,100% { opacity: 0.6; transform: translateX(-50%) scaleX(1); }
-50%     { opacity: 1.0; transform: translateX(-50%) scaleX(1.25); }
-}
-
-.vcard-caption {
-font-size: 8px; font-weight: 300;
-letter-spacing: 0.5em;
-color: rgba(200,168,90,0.3);
-text-transform: uppercase;
-text-align: center;
-margin-top: 24px;
-}
-
-/* ─── SHARED KEYFRAMES ──────────────────────── */
-@keyframes riseFade {
-from { opacity: 0; transform: translateY(18px); }
-to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes popUp {
-from { opacity: 0; transform: scale(0.65) translateY(10px); }
-to   { opacity: 1; transform: scale(1) translateY(0); }
+/* Visual pulse for iOS haptic substitute */
+.v-pulse{animation:vPulse 0.12s ease-out}
+@keyframes vPulse{
+0%{filter:brightness(1)}
+50%{filter:brightness(1.6)}
+100%{filter:brightness(1)}
 }
 </style>
 
 </head>
-
 <body>
 
-<!-- ════════════════════════════════════════════
-     SCREEN 1 · THE HOOK
-════════════════════════════════════════════ -->
+<!-- CURTAIN TRANSITION -->
 
-<div class="screen active" id="s1">
-  <div class="bg">
-    <div class="bg-top-glow"></div>
-    <div class="bg-bot-glow"></div>
-    <div class="bg-dots"></div>
-    <div class="bg-vignette"></div>
-  </div>
-
-  <p class="s1-badge">Arcana &ensp;·&ensp; The Draw</p>
-  <div class="s1-spade">♠</div>
-  <h1 class="s1-title">Find<br>the <em>Ace.</em></h1>
-  <div class="s1-line"></div>
-  <p class="s1-sub">Win a prize — if you're lucky enough.</p>
-  <button class="begin-btn" id="startBtn">Push to Begin</button>
-  <p class="s1-hint">One card holds everything</p>
+<div class="curtain" id="curtain">
+<div class="curtain-left"></div>
+<div class="curtain-right"></div>
+<div class="curtain-emblem">♠</div>
 </div>
 
-<!-- ════════════════════════════════════════════
-     SCREEN 2 · THE GAME
-════════════════════════════════════════════ -->
+<!-- TOAST -->
 
-<div class="screen" id="s2">
-  <div class="bg">
-    <div class="bg-top-glow"></div>
-    <div class="bg-dots"></div>
-    <div class="bg-vignette"></div>
-  </div>
+<div class="toast" id="toast"></div>
 
-  <div class="g-top">
-    <p class="g-eyebrow">Round One &ensp;·&ensp; The Draw</p>
-    <h2 class="g-title">Find the Ace<br>of Spades.</h2>
-    <p class="g-instr" id="gInstr">Memorise the Ace…</p>
-  </div>
+<!-- SCREEN 1 — THE HOOK -->
 
-  <div class="stage">
-    <div class="cards-row" id="cardsRow">
-
-```
-  <!-- Card 0 (starts as the Ace) -->
-  <div class="cw" id="c0">
-    <div class="ci">
-      <div class="cf cb"><div class="cb-inner"></div><span class="cb-sym">A</span></div>
-      <div class="cf cv">
-        <div class="cc"><span class="cr k" id="r0">A</span><span class="cs k" id="s0">♠</span></div>
-        <div class="cmid"><span class="cmid-s k" id="m0">♠</span></div>
-        <div class="cc br"><span class="cr k" id="r0b">A</span><span class="cs k" id="s0b">♠</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Card 1 -->
-  <div class="cw" id="c1">
-    <div class="ci">
-      <div class="cf cb"><div class="cb-inner"></div><span class="cb-sym">A</span></div>
-      <div class="cf cv">
-        <div class="cc"><span class="cr rd" id="r1">K</span><span class="cs rd" id="s1i">♥</span></div>
-        <div class="cmid"><span class="cmid-s rd" id="m1">♥</span></div>
-        <div class="cc br"><span class="cr rd" id="r1b">K</span><span class="cs rd" id="s1bi">♥</span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Card 2 -->
-  <div class="cw" id="c2">
-    <div class="ci">
-      <div class="cf cb"><div class="cb-inner"></div><span class="cb-sym">A</span></div>
-      <div class="cf cv">
-        <div class="cc"><span class="cr rd" id="r2">7</span><span class="cs rd" id="s2i">♦</span></div>
-        <div class="cmid"><span class="cmid-s rd" id="m2">♦</span></div>
-        <div class="cc br"><span class="cr rd" id="r2b">7</span><span class="cs rd" id="s2bi">♦</span></div>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /cards-row -->
-```
-
-  </div><!-- /stage -->
-
-  <div class="g-bot">
-    <p class="g-instr" id="gStatus">Watch carefully…</p>
-  </div>
-
-<canvas id="confetti"></canvas>
-
-  <div id="winOverlay">
-    <div class="wo-icon">🎉</div>
-    <div class="wo-heading">You Found It!</div>
-    <div class="wo-sub">Claiming your prize now</div>
-    <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
-  </div>
+<div class="screen active" id="screen1">
+<canvas class="bg-canvas" id="bgCanvas"></canvas>
+<div class="hero-content">
+<div class="hero-badge">Exclusive Access</div>
+<h1 class="hero-title">You've Been<br>Selected</h1>
+<button class="push-btn" id="pushBtn" aria-label="Start">
+<div class="glow-pulse"></div>
+<span class="btn-text">Push to<br>Start</span>
+<span class="btn-sub">▼</span>
+</button>
+<p class="hero-sub">Think you're lucky?</p>
+</div>
 </div>
 
-<!-- ════════════════════════════════════════════
-     SCREEN 3 · THE REVEAL
-════════════════════════════════════════════ -->
+<!-- SCREEN 2 — CARD GAME -->
 
-<div class="screen" id="s3">
-  <div class="bg">
-    <div class="bg-top-glow"></div>
-    <div class="bg-vignette"></div>
-  </div>
-
-  <!-- Loading splash -->
-
-  <div class="splash" id="splash">
-    <div class="splash-gift">🎁</div>
-    <div class="splash-label">Prize Loading…</div>
-    <div class="splash-sub">Preparing your reward</div>
-    <div class="spinner"></div>
-  </div>
-
-  <!-- Video card -->
-
-  <div class="card-wrap-s3" id="cardStage">
-
-```
-<!-- Corner ornaments -->
-<div class="vc-orn tl"><svg viewBox="0 0 28 28" fill="none"><path d="M2 26L2 2L26 2" stroke="rgba(200,168,90,0.45)" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="7" r="1.8" fill="rgba(200,168,90,0.4)"/></svg></div>
-<div class="vc-orn tr"><svg viewBox="0 0 28 28" fill="none"><path d="M2 26L2 2L26 2" stroke="rgba(200,168,90,0.45)" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="7" r="1.8" fill="rgba(200,168,90,0.4)"/></svg></div>
-<div class="vc-orn bl"><svg viewBox="0 0 28 28" fill="none"><path d="M2 26L2 2L26 2" stroke="rgba(200,168,90,0.45)" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="7" r="1.8" fill="rgba(200,168,90,0.4)"/></svg></div>
-<div class="vc-orn br"><svg viewBox="0 0 28 28" fill="none"><path d="M2 26L2 2L26 2" stroke="rgba(200,168,90,0.45)" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="7" r="1.8" fill="rgba(200,168,90,0.4)"/></svg></div>
-
-<div class="vcard">
-  <!-- Top strip -->
-  <div class="vs">
-    <div class="vs-corner"><span class="vs-rank">A</span><span class="vs-suit">♠</span></div>
-    <span class="vs-big">♠</span>
-    <div class="vs-corner" style="transform:rotate(180deg)"><span class="vs-rank">A</span><span class="vs-suit">♠</span></div>
-  </div>
-
-  <!-- Top separator -->
-  <div class="vl"></div>
-
-  <!-- Video window -->
-  <div class="vv" id="vcVideo">
-    <!-- Tap-to-play fallback for iOS -->
-    <div class="ttp" id="ttpOverlay">
-      <div class="ttp-play">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path d="M7 5L15 10L7 15V5Z" fill="#08080D"/>
-        </svg>
-      </div>
-      <span class="ttp-text">Tap to Play</span>
-    </div>
-  </div>
-
-  <!-- Bottom separator -->
-  <div class="vl"></div>
-
-  <!-- Bottom strip (mirrored) -->
-  <div class="vs bot">
-    <div class="vs-corner"><span class="vs-rank">A</span><span class="vs-suit">♠</span></div>
-    <span class="vs-big">♠</span>
-    <div class="vs-corner" style="transform:rotate(180deg)"><span class="vs-rank">A</span><span class="vs-suit">♠</span></div>
-  </div>
-</div><!-- /vcard -->
-
-<div class="vcard-glow"></div>
-<p class="vcard-caption">♠ &ensp; Ace of Spades &ensp; ♠</p>
-```
-
-  </div><!-- /card-wrap-s3 -->
+<div class="screen" id="screen2">
+<div class="game-header">
+<h2>Find the Ace</h2>
+<p>Pick a card. Win a prize.</p>
 </div>
+<div class="card-table" id="cardTable">
+<!-- Cards injected by JS -->
+</div>
+<div class="success-overlay" id="successOverlay">
+<div class="success-banner">🎉 YOU FOUND IT!</div>
+<div class="progress-container">
+<div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+<div class="progress-pct" id="progressPct">0%</div>
+<div class="progress-status" id="progressStatus"></div>
+</div>
+</div>
+</div>
+
+<!-- SCREEN 3 — RICKROLL -->
+
+<div class="screen" id="screen3">
+<div class="prize-splash" id="prizeSplash">
+<div class="emoji">🎁</div>
+<p>Prize Loading…</p>
+<div class="spinner"></div>
+</div>
+<div class="video-container" id="videoContainer"></div>
+</div>
+
+<!-- CONFETTI -->
+
+<div class="confetti-container" id="confettiContainer"></div>
 
 <script>
-/* ─────────────────────────────────────────────────────
-   LOCK: kill all scroll / bounce / zoom
-───────────────────────────────────────────────────── */
-document.addEventListener('touchmove',  e => e.preventDefault(), { passive: false });
-document.addEventListener('touchstart', e => {
-  // allow events to propagate for buttons/cards, just no default scroll
-}, { passive: true });
+// ===== GLOBALS & STATE =====
+let audioCtx=null;
+let rapidTapCount=0;
+let rapidTapTimer=null;
+let currentScreen=1;
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
 
-/* ─────────────────────────────────────────────────────
-   SCREEN TRANSITIONS
-───────────────────────────────────────────────────── */
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => {
-    s.classList.remove('active');
-    s.style.pointerEvents = 'none';
-  });
-  const el = document.getElementById(id);
-  el.classList.add('active');
-  el.style.pointerEvents = 'all';
+// ===== PREVENT ALL SCROLLING =====
+document.addEventListener('touchmove',e=>e.preventDefault(),{passive:false});
+document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
+document.addEventListener('gesturechange',e=>e.preventDefault(),{passive:false});
+window.addEventListener('scroll',()=>window.scrollTo(0,0));
+
+// ===== AUDIO ENGINE (Web Audio API) =====
+function ensureAudio(){
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended')audioCtx.resume();
 }
 
-/* ─────────────────────────────────────────────────────
-   SCREEN 1 → 2
-───────────────────────────────────────────────────── */
-const startBtn = document.getElementById('startBtn');
-
-function goToGame() {
-  showScreen('s2');
-  setTimeout(dealPhase, 400);
+function playNoise(duration,volume,filterFreq){
+  ensureAudio();
+  const bufSize=audioCtx.sampleRate*duration;
+  const buf=audioCtx.createBuffer(1,bufSize,audioCtx.sampleRate);
+  const data=buf.getChannelData(0);
+  for(let i=0;i<bufSize;i++)data[i]=(Math.random()*2-1);
+  const src=audioCtx.createBufferSource();
+  src.buffer=buf;
+  const filter=audioCtx.createBiquadFilter();
+  filter.type='bandpass';filter.frequency.value=filterFreq||800;filter.Q.value=0.5;
+  const gain=audioCtx.createGain();
+  gain.gain.setValueAtTime(volume||0.08,audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+duration);
+  src.connect(filter);filter.connect(gain);gain.connect(audioCtx.destination);
+  src.start();src.stop(audioCtx.currentTime+duration);
 }
 
-startBtn.addEventListener('click',    goToGame);
-startBtn.addEventListener('touchend', e => { e.preventDefault(); goToGame(); });
-
-/* ─────────────────────────────────────────────────────
-   CARD FACE DATA
-───────────────────────────────────────────────────── */
-const CARDS = [0, 1, 2].map(i => document.getElementById('c' + i));
-
-function setFace(i, rank, suit, cls, mid) {
-  const $ = id => document.getElementById(id);
-  const els = [$('r'+i), $('s'+i+'i'), $('m'+i), $('r'+i+'b'), $('s'+i+'bi')];
-  const vals = [rank, suit, mid, rank, suit];
-  els.forEach((el, j) => {
-    if (!el) return;
-    el.textContent = vals[j];
-    el.className = el.className.replace(/\bk\b|\brd\b/g, '').trim() + ' ' + cls;
-  });
-}
-
-/* Initial faces (card 0 = Ace, others = decoys) */
-setFace(0, 'A', '♠', 'k',  '♠');
-setFace(1, 'K', '♥', 'rd', '♥');
-setFace(2, '7', '♦', 'rd', '♦');
-
-/* ─────────────────────────────────────────────────────
-   PHASE 1 — DEAL
-───────────────────────────────────────────────────── */
-function dealPhase() {
-  setMsg('Memorise the Ace of Spades…');
-  // Reset cards
-  CARDS.forEach(c => {
-    c.classList.remove('deal-in', 'flipped', 'pressable', 'chosen');
-    c.style.cssText = '';
-  });
-  // Trigger reflow, then animate
-  CARDS[0].getBoundingClientRect();
-  CARDS.forEach(c => c.classList.add('deal-in'));
-
-  // Show faces briefly
-  setTimeout(() => {
-    CARDS.forEach(c => c.classList.add('flipped'));
-    setMsg('Remember it — they\'re about to shuffle!');
-
-    setTimeout(() => {
-      CARDS.forEach(c => c.classList.remove('flipped'));
-      setTimeout(shufflePhase, 550);
-    }, 1900);
-  }, 720);
-}
-
-/* ─────────────────────────────────────────────────────
-   PHASE 2 — SHUFFLE
-───────────────────────────────────────────────────── */
-function shufflePhase() {
-  setMsg('Shuffling…');
-
-  // Sequences: [card0-x, card1-x, card2-x] in px
-  const seq = [
-    [-52,  0,  52],
-    [  0, 52, -52],
-    [ 52,-52,   0],
-    [-52,  0,  52],
-    [  0,  0,   0],
-  ];
-
-  const ROTS = ['-3deg', '0deg', '3deg'];
-  let step = 0;
-
-  function next() {
-    if (step >= seq.length) { setTimeout(pickPhase, 300); return; }
-    const s = seq[step++];
-    CARDS.forEach((c, i) => {
-      c.style.transition = 'transform 0.28s cubic-bezier(0.4,0,0.2,1)';
-      c.style.transform  = `translateY(${i===1?'-10px':'0'}) rotate(${ROTS[i]}) translateX(${s[i]}px)`;
-    });
-    setTimeout(next, 340);
+function playCardShuffle(){
+  for(let i=0;i<3;i++){
+    setTimeout(()=>playNoise(0.06,0.04,2500+Math.random()*2000),i*60);
   }
-  next();
 }
 
-/* ─────────────────────────────────────────────────────
-   PHASE 3 — PICK
-───────────────────────────────────────────────────── */
-function pickPhase() {
-  setMsg('Tap to choose your card ↑');
-  CARDS.forEach(c => {
-    c.style.transition = '';
-    c.style.transform  = '';
-    c.style.pointerEvents = 'auto';
-    c.classList.add('pressable');
-    c.addEventListener('click',    onPick, { once: true });
-    c.addEventListener('touchend', onPick, { once: true });
+function playCardFlip(){playNoise(0.08,0.06,3500)}
+
+function playSuccessChime(){
+  ensureAudio();
+  const notes=[523.25,659.25,783.99,1046.5];
+  notes.forEach((freq,i)=>{
+    setTimeout(()=>{
+      const osc=audioCtx.createOscillator();
+      osc.type='sine';osc.frequency.value=freq;
+      const gain=audioCtx.createGain();
+      gain.gain.setValueAtTime(0.08,audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.5);
+      osc.connect(gain);gain.connect(audioCtx.destination);
+      osc.start();osc.stop(audioCtx.currentTime+0.5);
+    },i*120);
   });
 }
 
-function onPick(e) {
-  e.preventDefault();
-  const picked = e.currentTarget;
-  const idx = CARDS.indexOf(picked);
-
-  // Disarm others
-  CARDS.forEach(c => {
-    c.style.pointerEvents = 'none';
-    c.classList.remove('pressable');
-    c.removeEventListener('click',    onPick);
-    c.removeEventListener('touchend', onPick);
-  });
-
-  // Swap face to Ace before flip (the prank!)
-  setFace(idx, 'A', '♠', 'k', '♠');
-
-  picked.classList.add('chosen');
-  setMsg('');
-
-  setTimeout(() => {
-    picked.classList.add('flipped');
-    setTimeout(winPhase, 760);
-  }, 220);
+function playTick(){
+  ensureAudio();
+  const osc=audioCtx.createOscillator();
+  osc.type='square';osc.frequency.value=1200;
+  const gain=audioCtx.createGain();
+  gain.gain.setValueAtTime(0.03,audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.03);
+  osc.connect(gain);gain.connect(audioCtx.destination);
+  osc.start();osc.stop(audioCtx.currentTime+0.03);
 }
 
-/* ─────────────────────────────────────────────────────
-   PHASE 4 — WIN
-───────────────────────────────────────────────────── */
-let rafId;
+// ===== HAPTICS =====
+function haptic(pattern){
+  if(navigator.vibrate)navigator.vibrate(pattern);
+}
+function hapticTap(){haptic(15)}
+function hapticSuccess(){haptic([30,50,30,50,60])}
 
-function winPhase() {
-  spawnConfetti();
-  const ov = document.getElementById('winOverlay');
-  ov.classList.add('show');
+// Visual pulse for iOS
+function visualPulse(el){
+  el.classList.remove('v-pulse');
+  void el.offsetWidth;
+  el.classList.add('v-pulse');
+}
 
-  // Kick progress bar on next paint
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      document.getElementById('progFill').style.width = '100%';
+// ===== TOAST =====
+function showToast(msg,dur){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur||1800);
+}
+
+// ===== RAPID TAP EASTER EGG =====
+function trackRapidTap(){
+  rapidTapCount++;
+  clearTimeout(rapidTapTimer);
+  rapidTapTimer=setTimeout(()=>rapidTapCount=0,800);
+  if(rapidTapCount>=5){
+    rapidTapCount=0;
+    showToast('Nice try 😏');
+    haptic([20,40,20]);
+  }
+}
+
+// ===== BACKGROUND CANVAS (SCREEN 1) =====
+function initBgCanvas(){
+  const canvas=document.getElementById('bgCanvas');
+  const ctx=canvas.getContext('2d');
+  let w,h;
+  function resize(){
+    w=canvas.width=window.innerWidth;
+    h=canvas.height=window.innerHeight;
+  }
+  resize();window.addEventListener('resize',resize);
+
+  const particles=[];
+  for(let i=0;i<50;i++){
+    particles.push({
+      x:Math.random()*w,y:Math.random()*h,
+      vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,
+      r:Math.random()*1.5+0.5,
+      a:Math.random()*0.3+0.05,
+      color:Math.random()>0.7?'168,85,247':'212,168,67'
     });
-  });
+  }
 
-  setTimeout(() => {
-    cancelAnimationFrame(rafId);
-    clearConfettiCanvas();
-    showScreen('s3');
-    revealPrize();
-  }, 2500);
-}
+  let t=0;
+  function draw(){
+    t+=0.005;
+    ctx.clearRect(0,0,w,h);
 
-/* ─────────────────────────────────────────────────────
-   SCREEN 3 — REVEAL
-───────────────────────────────────────────────────── */
-function revealPrize() {
-  const splash = document.getElementById('splash');
-  const stage  = document.getElementById('cardStage');
-  const vc     = document.getElementById('vcVideo');
-  const ttp    = document.getElementById('ttpOverlay');
+    // Gradient waves
+    const grd=ctx.createRadialGradient(
+      w/2+Math.sin(t)*100,h/2+Math.cos(t*0.7)*80,0,
+      w/2,h/2,Math.max(w,h)*0.7
+    );
+    grd.addColorStop(0,'rgba(124,58,237,0.08)');
+    grd.addColorStop(0.5,'rgba(90,30,200,0.03)');
+    grd.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=grd;ctx.fillRect(0,0,w,h);
 
-  // VIDEO_ID from https://youtu.be/xvFZjo5PgG0
-  const VID = 'xvFZjo5PgG0';
-  const src = `https://www.youtube.com/embed/${VID}?autoplay=1&rel=0&playsinline=1&modestbranding=1&iv_load_policy=3&fs=0`;
+    const grd2=ctx.createRadialGradient(
+      w/2+Math.cos(t*1.3)*120,h/2+Math.sin(t*0.9)*100,0,
+      w/2,h/2,Math.max(w,h)*0.5
+    );
+    grd2.addColorStop(0,'rgba(212,168,67,0.04)');
+    grd2.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=grd2;ctx.fillRect(0,0,w,h);
 
-  setTimeout(() => {
-    // Inject iframe
-    const iframe = document.createElement('iframe');
-    iframe.src = src;
-    iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture; web-share');
-    iframe.setAttribute('allowfullscreen', '');
-    iframe.setAttribute('frameborder', '0');
-    iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;display:block;';
-    vc.appendChild(iframe);
-
-    // Hide splash, show card
-    splash.classList.add('gone');
-    setTimeout(() => stage.classList.add('reveal'), 120);
-
-    // Tap-to-play: if autoplay blocked, tapping overlay relaunches with sound
-    ttp.addEventListener('click', () => triggerPlay(iframe, ttp));
-    ttp.addEventListener('touchend', e => { e.preventDefault(); triggerPlay(iframe, ttp); });
-
-    // Try to detect autoplay working via postMessage from YouTube iframe API
-    // Fallback: hide ttp after 2s if video appears to have started (no reliable signal)
-    // We'll just hide the overlay on any interaction with the page after 800ms
-    setTimeout(() => {
-      // If user already engaged, autoplay probably worked
-      ttp.classList.add('gone');
-    }, 2800);
-
-  }, 1300);
-}
-
-function triggerPlay(iframe, ttp) {
-  // Reload iframe src to trigger fresh autoplay after user gesture
-  const cur = iframe.src;
-  iframe.src = '';
-  requestAnimationFrame(() => { iframe.src = cur; });
-  ttp.classList.add('gone');
-}
-
-/* ─────────────────────────────────────────────────────
-   HELPERS
-───────────────────────────────────────────────────── */
-function setMsg(txt) {
-  document.getElementById('gInstr').textContent  = txt;
-  document.getElementById('gStatus').textContent = txt;
-}
-
-/* ─────────────────────────────────────────────────────
-   CONFETTI
-───────────────────────────────────────────────────── */
-const CONF_COLORS = ['#C8A85A','#EACF82','#F5F0E8','#6B4E1A','#FFFFFF','#D4B896','#B8A070'];
-
-function spawnConfetti() {
-  const cvs = document.getElementById('confetti');
-  cvs.width  = window.innerWidth;
-  cvs.height = window.innerHeight;
-  const ctx  = cvs.getContext('2d');
-
-  const ps = Array.from({ length: 130 }, () => ({
-    x:  Math.random() * cvs.width,
-    y:  -15 - Math.random() * 90,
-    vx: (Math.random() - 0.5) * 5.5,
-    vy: 2.5 + Math.random() * 5,
-    w:  5 + Math.random() * 8,
-    h:  2.5 + Math.random() * 4,
-    r:  Math.random() * 360,
-    rv: (Math.random() - 0.5) * 9,
-    c:  CONF_COLORS[Math.floor(Math.random() * CONF_COLORS.length)],
-    a:  1,
-  }));
-
-  function draw() {
-    ctx.clearRect(0, 0, cvs.width, cvs.height);
-    let alive = false;
-    ps.forEach(p => {
-      if (p.a <= 0) return;
-      alive = true;
-      ctx.save();
-      ctx.globalAlpha = p.a;
-      ctx.fillStyle   = p.c;
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.r * Math.PI / 180);
-      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-      ctx.restore();
-      p.x  += p.vx;
-      p.y  += p.vy;
-      p.vy += 0.14;
-      p.r  += p.rv;
-      if (p.y > cvs.height - 50) p.a -= 0.038;
+    // Particles
+    particles.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=w;if(p.x>w)p.x=0;
+      if(p.y<0)p.y=h;if(p.y>h)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${p.color},${p.a+Math.sin(t*2+p.x*0.01)*0.1})`;
+      ctx.fill();
     });
-    if (alive) rafId = requestAnimationFrame(draw);
+
+    if(currentScreen===1)requestAnimationFrame(draw);
   }
   draw();
 }
 
-function clearConfettiCanvas() {
-  const cvs = document.getElementById('confetti');
-  cvs.getContext('2d').clearRect(0, 0, cvs.width, cvs.height);
+// ===== CURTAIN TRANSITION =====
+function curtainTransition(callback){
+  const c=document.getElementById('curtain');
+  c.className='curtain closing';
+  setTimeout(()=>{
+    callback();
+    c.className='curtain opening';
+    setTimeout(()=>c.className='curtain',600);
+  },700);
 }
+
+// ===== SCREEN MANAGEMENT =====
+function showScreen(num){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen'+num).classList.add('active');
+  currentScreen=num;
+}
+
+// ===== CARD GAME ENGINE =====
+const CARDS=[
+  {rank:'A',suit:'♠',color:'black',isAce:true},
+  {rank:'K',suit:'♥',color:'red',isAce:false},
+  {rank:'Q',suit:'♦',color:'red',isAce:false}
+];
+
+// slotCards[i] = which CARD INDEX is in visual slot i
+// Slot 0=left, 1=center, 2=right. Card 0=Ace, 1=King, 2=Queen
+let slotCards=[0,1,2];
+let gamePhase='idle';
+
+const SLOT_X=[-130,0,130]; // px offsets for 3 card positions
+
+function getCardElements(){return[...document.querySelectorAll('.card-slot')]}
+
+function createCardHTML(card){
+  return `
+    <div class="card-inner">
+      <div class="card-face card-back">
+        <div class="card-back-pattern"></div>
+      </div>
+      <div class="card-face card-front ${card.color}">
+        <div class="card-corner top">
+          <span class="card-corner-rank">${card.rank}</span>
+          <span class="card-corner-suit">${card.suit}</span>
+        </div>
+        <div class="card-center-suit">${card.suit}</div>
+        <div class="card-corner bottom">
+          <span class="card-corner-rank">${card.rank}</span>
+          <span class="card-corner-suit">${card.suit}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildCards(){
+  const table=document.getElementById('cardTable');
+  table.innerHTML='';
+  slotCards=[0,1,2];
+
+  // Create 3 card elements — these stay in fixed DOM order (0,1,2)
+  // Their visual position is controlled entirely by transforms
+  CARDS.forEach((card,i)=>{
+    const el=document.createElement('div');
+    el.className='card-slot';
+    el.dataset.domIndex=i;
+    el.innerHTML=createCardHTML(card);
+    el.style.opacity='0';
+    el.style.transition='none';
+    el.style.transform=`translateX(${SLOT_X[i]}px)`;
+    table.appendChild(el);
+
+    el.addEventListener('click',()=>handleCardPick(i));
+  });
+}
+
+// Move card element to a visual slot position
+function moveCardToSlot(cardEl,slotIdx,duration,arcY,rotation){
+  const dur=duration||400;
+  const arc=arcY||0;
+  const rot=rotation||0;
+  cardEl.classList.add('shuffling');
+  cardEl.style.transition=`transform ${dur}ms cubic-bezier(0.45,0,0.55,1)`;
+  cardEl.style.transform=`translateX(${SLOT_X[slotIdx]}px) translateY(${arc}px) rotate(${rot}deg)`;
+
+  setTimeout(()=>{
+    cardEl.style.transform=`translateX(${SLOT_X[slotIdx]}px)`;
+    cardEl.classList.remove('shuffling');
+  },dur+30);
+}
+
+// Find which DOM element currently holds a given card index
+function findCardEl(cardIdx){
+  return document.querySelector(`.card-slot[data-dom-index="${cardIdx}"]`);
+}
+
+// Find which slot a card is in
+function findSlotOf(cardIdx){return slotCards.indexOf(cardIdx)}
+
+function dealCards(){
+  gamePhase='dealing';
+  const els=getCardElements();
+
+  els.forEach((el,i)=>{
+    // Start from off-screen bottom
+    el.style.transition='none';
+    el.style.transform='translateY(350px) rotate(12deg) scale(0.6)';
+    el.style.opacity='0';
+
+    setTimeout(()=>{
+      el.style.transition='transform 0.6s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease';
+      el.style.opacity='1';
+      el.style.transform=`translateX(${SLOT_X[i]}px)`;
+      playCardFlip();hapticTap();
+    },200+i*220);
+  });
+
+  setTimeout(revealCards,1100);
+}
+
+function revealCards(){
+  gamePhase='revealing';
+  const els=getCardElements();
+
+  // Add the subtle "tell" glow to the Ace
+  const aceEl=findCardEl(0);
+  aceEl.classList.add('has-tell');
+
+  // Flip all face-up
+  els.forEach((el,i)=>{
+    setTimeout(()=>{
+      el.querySelector('.card-inner').classList.add('flipped');
+      playCardFlip();hapticTap();
+    },i*200);
+  });
+
+  // Hold, then flip back
+  setTimeout(()=>{
+    els.forEach((el,i)=>{
+      setTimeout(()=>{
+        el.querySelector('.card-inner').classList.remove('flipped');
+        playCardFlip();
+      },i*130);
+    });
+    setTimeout(()=>{
+      aceEl.classList.remove('has-tell');
+      startShuffle();
+    },550);
+  },2200);
+}
+
+function startShuffle(){
+  gamePhase='shuffling';
+
+  // Build a sequence of swap operations with accelerating tempo
+  const swapOps=[];
+  const passes=[
+    {count:3,interval:420},  // slow
+    {count:4,interval:300},  // medium
+    {count:3,interval:210},  // fast
+  ];
+
+  // Pre-generate which slots to swap per operation
+  passes.forEach(pass=>{
+    for(let s=0;s<pass.count;s++){
+      const a=Math.floor(Math.random()*3);
+      let b=(a+1+Math.floor(Math.random()*2))%3;
+      swapOps.push({a,b,dur:pass.interval*0.7});
+    }
+  });
+
+  let cumDelay=0;
+  swapOps.forEach((op,idx)=>{
+    const interval=idx<3?420:idx<7?300:210;
+    setTimeout(()=>executeSwap(op.a,op.b,op.dur),cumDelay);
+    cumDelay+=interval;
+  });
+
+  setTimeout(()=>{
+    gamePhase='picking';
+    // Re-add subtle tell to whichever slot the ace is in now
+    const aceSlotIdx=findSlotOf(0);
+    const aceEl=findCardEl(0);
+    setTimeout(()=>aceEl.classList.add('has-tell'),250);
+  },cumDelay+150);
+}
+
+function executeSwap(slotA,slotB,duration){
+  // Which cards are in these slots?
+  const cardA=slotCards[slotA];
+  const cardB=slotCards[slotB];
+  const elA=findCardEl(cardA);
+  const elB=findCardEl(cardB);
+
+  const dir=slotB>slotA?1:-1;
+
+  // Card A arcs upward to slot B
+  moveCardToSlot(elA,slotB,duration,-18*dir,dir*4);
+  // Card B arcs downward to slot A
+  moveCardToSlot(elB,slotA,duration,18*dir,-dir*4);
+
+  playCardShuffle();
+
+  // Update tracking
+  slotCards[slotA]=cardB;
+  slotCards[slotB]=cardA;
+}
+
+function handleCardPick(domIndex){
+  trackRapidTap();
+  if(gamePhase!=='picking')return;
+  gamePhase='done';
+
+  const el=getCardElements()[domIndex];
+  hapticTap();
+  visualPulse(el);
+
+  // Swap the card face to ALWAYS be the Ace — the con
+  const front=el.querySelector('.card-front');
+  front.className='card-face card-front black';
+  front.innerHTML=`
+    <div class="card-corner top">
+      <span class="card-corner-rank">A</span>
+      <span class="card-corner-suit">♠</span>
+    </div>
+    <div class="card-center-suit">♠</div>
+    <div class="card-corner bottom">
+      <span class="card-corner-rank">A</span>
+      <span class="card-corner-suit">♠</span>
+    </div>`;
+
+  el.querySelector('.card-inner').classList.add('flipped');
+  el.classList.remove('has-tell');
+  playCardFlip();
+
+  setTimeout(()=>{
+    playSuccessChime();
+    hapticSuccess();
+    fireConfetti();
+    showSuccess();
+  },700);
+}
+
+// ===== CONFETTI =====
+function fireConfetti(){
+  const container=document.getElementById('confettiContainer');
+  const colors=['#d4a843','#7c3aed','#a855f7','#f0d78c','#f43f5e','#ffffff'];
+
+  for(let i=0;i<60;i++){
+    const piece=document.createElement('div');
+    piece.className='confetti-piece';
+    const c=colors[Math.floor(Math.random()*colors.length)];
+    const size=Math.random()*8+6;
+    const isCircle=Math.random()>0.5;
+    piece.style.cssText=`
+      left:${Math.random()*100}%;
+      width:${size}px;height:${isCircle?size:size*0.5}px;
+      background:${c};
+      border-radius:${isCircle?'50%':'2px'};
+      animation-duration:${Math.random()*1.5+1.5}s;
+      animation-delay:${Math.random()*0.3}s;
+    `;
+    container.appendChild(piece);
+  }
+  setTimeout(()=>container.innerHTML='',4000);
+}
+
+// ===== SUCCESS & LOADING =====
+function showSuccess(){
+  const overlay=document.getElementById('successOverlay');
+  overlay.classList.add('active');
+
+  const fill=document.getElementById('progressFill');
+  const pct=document.getElementById('progressPct');
+  const status=document.getElementById('progressStatus');
+
+  const statuses=[
+    {at:0,text:'Verifying result…'},
+    {at:25,text:'Authenticating selection…'},
+    {at:50,text:'Connecting to prize server…'},
+    {at:78,text:'Reserving your reward…'},
+    {at:95,text:'Almost there…'},
+    {at:100,text:'Done ✓'}
+  ];
+
+  let progress=0;
+  const interval=setInterval(()=>{
+    progress+=Math.random()*4+1.5;
+    if(progress>100)progress=100;
+    const p=Math.round(progress);
+    fill.style.width=p+'%';
+    pct.textContent=p+'%';
+    playTick();
+
+    const s=statuses.filter(st=>st.at<=p).pop();
+    if(s)status.textContent=s.text;
+
+    if(progress>=100){
+      clearInterval(interval);
+      setTimeout(()=>{
+        curtainTransition(()=>{
+          showScreen(3);
+          startPrizeSplash();
+        });
+      },400);
+    }
+  },50);
+}
+
+// ===== SCREEN 3 — PRIZE / RICKROLL =====
+function startPrizeSplash(){
+  const splash=document.getElementById('prizeSplash');
+  const vc=document.getElementById('videoContainer');
+  splash.style.display='flex';
+  vc.classList.remove('active');
+
+  setTimeout(()=>{
+    splash.style.display='none';
+    // Inject iframe on user gesture chain (for iOS autoplay)
+    vc.innerHTML=`<iframe
+      src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1&rel=0&playsinline=1&mute=0&controls=0&modestbranding=1"
+      allow="autoplay; fullscreen; encrypted-media"
+      allowfullscreen
+      frameborder="0"
+      style="width:100%;height:100%;border:none;"
+    ></iframe>`;
+    vc.classList.add('active');
+  },1400);
+}
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded',()=>{
+  initBgCanvas();
+
+  // PUSH TO START
+  const pushBtn=document.getElementById('pushBtn');
+  pushBtn.addEventListener('click',()=>{
+    trackRapidTap();
+    ensureAudio();
+    hapticTap();
+    visualPulse(pushBtn);
+
+    // Play a subtle deep hit
+    playNoise(0.15,0.1,200);
+
+    pushBtn.style.pointerEvents='none';
+
+    curtainTransition(()=>{
+      showScreen(2);
+      buildCards();
+      setTimeout(dealCards,300);
+    });
+  });
+
+  // Prevent zoom
+  document.addEventListener('dblclick',e=>e.preventDefault());
+
+  // Handle iOS viewport height
+  function setVH(){
+    document.documentElement.style.setProperty('--real-vh',window.innerHeight+'px');
+  }
+  setVH();
+  window.addEventListener('resize',setVH);
+});
 </script>
 
 </body>
